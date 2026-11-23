@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# Node / Astro
+node_modules/
+dist/
+.astro/
+
+# Sistema
+Thumbs.db
+.DS_Store

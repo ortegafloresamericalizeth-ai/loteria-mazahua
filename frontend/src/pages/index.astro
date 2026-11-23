@@ -1,0 +1,160 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base titulo="Inicio">
+  <section class="portada">
+    <p class="etiqueta">Proyecto Integrador · Sistemas Operativos II</p>
+    <h2>Lotería Interactiva para el Fortalecimiento de la Lengua Mazahua</h2>
+    <p class="subtitulo">
+      Plataforma web de apoyo al aprendizaje del vocabulario mazahua en escuelas
+      de educación básica.
+    </p>
+    <div class="acciones">
+      <a class="boton" href="/jugar">Jugar</a>
+      <a class="boton secundario" href="/catalogo">Consultar el catálogo</a>
+    </div>
+  </section>
+
+  <section class="bloque">
+    <h3>Planteamiento del problema</h3>
+    <p>
+      La lengua mazahua, hablada principalmente en comunidades del Estado de
+      México, ha disminuido su uso entre las nuevas generaciones. En el ámbito de
+      la educación básica existe una disponibilidad limitada de materiales
+      didácticos interactivos que permitan a los estudiantes familiarizarse con su
+      vocabulario de manera sencilla, dinámica y relacionada con su contexto.
+    </p>
+  </section>
+
+  <section class="bloque">
+    <h3>Objetivo</h3>
+    <p>
+      Desarrollar una lotería interactiva que permita a los estudiantes reconocer
+      y asociar imágenes, palabras y pronunciaciones del vocabulario en lengua
+      mazahua mediante el uso de tecnologías digitales y recursos electrónicos.
+    </p>
+  </section>
+
+  <section class="bloque">
+    <h3>Componentes de la plataforma</h3>
+    <div class="rejilla">
+      <article>
+        <h4>Catálogo de vocabulario</h4>
+        <p>
+          Consulta de cada elemento con su imagen, su nombre en español y en
+          mazahua, y su categoría.
+        </p>
+      </article>
+      <article>
+        <h4>Pronunciación</h4>
+        <p>
+          Reproducción del audio con la pronunciación de cada palabra en lengua
+          mazahua.
+        </p>
+      </article>
+      <article>
+        <h4>Dinámica de lotería</h4>
+        <p>
+          Tablero y baraja para jugar desde el navegador, asociando la palabra
+          escuchada con su imagen.
+        </p>
+      </article>
+      <article>
+        <h4>Administración</h4>
+        <p>
+          Registro, modificación y eliminación de elementos, así como la carga
+          de imágenes y audios.
+        </p>
+      </article>
+    </div>
+  </section>
+
+  <section class="bloque">
+    <h3>Tecnologías utilizadas</h3>
+    <ul class="tecnologias">
+      <li><strong>FastAPI</strong> · API REST del sistema</li>
+      <li><strong>Astro</strong> · interfaz web interactiva y responsiva</li>
+      <li><strong>MySQL</strong> · base de datos del vocabulario</li>
+    </ul>
+    <p class="nota">
+      La arquitectura permite integrar, en una etapa posterior, los componentes
+      electrónicos del proyecto (tarjetas con tecnología RFID, luces y botones)
+      desarrollados en otras asignaturas.
+    </p>
+  </section>
+</Base>
+
+<style>
+  .portada {
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-left: 6px solid var(--acento);
+    border-radius: 6px;
+    padding: 2rem 1.75rem;
+    margin-bottom: 2rem;
+  }
+  .etiqueta {
+    margin: 0 0 0.5rem;
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #7a6a58;
+  }
+  .portada h2 {
+    margin: 0 0 0.75rem;
+    font-size: 1.9rem;
+    line-height: 1.25;
+    max-width: 760px;
+  }
+  .subtitulo {
+    margin: 0 0 1.5rem;
+    max-width: 640px;
+    line-height: 1.6;
+    color: #4a3d30;
+  }
+  .acciones { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+  .boton {
+    background: var(--acento);
+    color: #fff;
+    border: 1px solid var(--acento);
+    border-radius: 4px;
+    padding: 0.6rem 1.25rem;
+    text-decoration: none;
+    font-weight: 600;
+  }
+  .boton.secundario { background: transparent; color: var(--acento); }
+  .boton:hover { opacity: 0.88; }
+
+  .bloque { margin-bottom: 2rem; }
+  .bloque h3 {
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.4rem;
+    border-bottom: 1px solid var(--borde);
+    color: var(--acento);
+    font-size: 1.25rem;
+  }
+  .bloque p { line-height: 1.7; max-width: 800px; margin: 0; }
+
+  .rejilla {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 1rem;
+  }
+  .rejilla article {
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+    padding: 1rem 1.1rem;
+  }
+  .rejilla h4 { margin: 0 0 0.4rem; font-size: 1rem; }
+  .rejilla p { font-size: 0.92rem; line-height: 1.55; }
+
+  .tecnologias { margin: 0 0 1rem; padding-left: 1.2rem; line-height: 1.9; }
+  .nota { font-size: 0.92rem; color: #4a3d30; }
+
+  @media (max-width: 600px) {
+    .portada { padding: 1.5rem 1.1rem; }
+    .portada h2 { font-size: 1.45rem; }
+  }
+</style>

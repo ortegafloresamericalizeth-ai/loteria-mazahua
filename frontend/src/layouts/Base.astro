@@ -1,0 +1,81 @@
+---
+interface Props {
+  titulo: string;
+}
+const { titulo } = Astro.props;
+
+const ruta = Astro.url.pathname.replace(/\/$/, "") || "/";
+const enlaces = [
+  { href: "/", texto: "Inicio" },
+  { href: "/catalogo", texto: "Catálogo" },
+  { href: "/jugar", texto: "Jugar" },
+  { href: "/admin", texto: "Administrar" },
+  { href: "/videos", texto: "Videos" },
+];
+---
+
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titulo} | Lotería Mazahua</title>
+  </head>
+  <body>
+    <header>
+      <a class="marca" href="/">Lotería Mazahua</a>
+      <nav>
+        {enlaces.map((e) => (
+          <a href={e.href} class:list={[{ activo: ruta === e.href }]}>{e.texto}</a>
+        ))}
+      </nav>
+    </header>
+    <main>
+      <slot />
+    </main>
+    <footer>Proyecto Integrador · Sistemas Operativos II</footer>
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --fondo: #fdf6ec;
+    --tarjeta: #ffffff;
+    --acento: #b5411c;
+    --texto: #2b2118;
+    --borde: #e7d8c3;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, sans-serif;
+    background: var(--fondo);
+    color: var(--texto);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  header {
+    background: var(--acento);
+    color: #fff;
+    padding: 1rem 1.5rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+  .marca { color: #fff; text-decoration: none; font-size: 1.4rem; font-weight: 700; }
+  nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+  nav a { color: #fff; text-decoration: none; font-weight: 600; padding-bottom: 2px; }
+  nav a:hover { text-decoration: underline; }
+  nav a.activo { border-bottom: 2px solid #fff; }
+  main { width: 100%; max-width: 1100px; margin: 0 auto; padding: 1.5rem; flex: 1; }
+  footer {
+    text-align: center;
+    padding: 1rem;
+    font-size: 0.85rem;
+    color: #7a6a58;
+    border-top: 1px solid var(--borde);
+  }
+</style>

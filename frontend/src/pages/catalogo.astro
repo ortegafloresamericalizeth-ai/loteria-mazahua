@@ -1,0 +1,199 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base titulo="Catálogo">
+  <h2>Catálogo de vocabulario</h2>
+
+  <div class="filtros">
+    <input id="buscar" type="search" placeholder="Buscar en español o mazahua…" />
+    <select id="categoria">
+      <option value="">Todas las categorías</option>
+    </select>
+  </div>
+
+  <p id="estado" role="status">Cargando…</p>
+  <section id="grid" class="grid"></section>
+</Base>
+
+<script>
+  import { API, urlArchivo } from "../config";
+
+  interface Elemento {
+    id: number;
+    nombre_espanol: string;
+    nombre_mazahua: string;
+    categoria: string | null;
+    imagen: string | null;
+    audio_mazahua: string | null;
+    audio_espanol: string | null;
+  }
+
+  const grid = document.getElementById("grid")!;
+  const estado = document.getElementById("estado")!;
+  const inBuscar = document.getElementById("buscar") as HTMLInputElement;
+  const selCat = document.getElementById("categoria") as HTMLSelectElement;
+
+  let todos: Elemento[] = [];
+  let audioActual: HTMLAudioElement | null = null;
+
+  // Quita acentos y mayúsculas para buscar de forma flexible
+  const norm = (t: string) =>
+    t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+  function reproducir(ruta: string | null) {
+    const url = urlArchivo(ruta);
+    if (!url) return;
+    audioActual?.pause();
+    audioActual = new Audio(url);
+    audioActual.play().catch(() => {
+      estado.textContent = "No se pudo reproducir el audio.";
+    });
+  }
+
+  function botonAudio(texto: string, ruta: string | null): HTMLButtonElement {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = texto;
+    b.disabled = !ruta;
+    b.title = ruta ? "" : "Aún no hay audio";
+    b.addEventListener("click", () => reproducir(ruta));
+    return b;
+  }
+
+  function crearTarjeta(e: Elemento): HTMLElement {
+    const art = document.createElement("article");
+    art.className = "tarjeta";
+
+    const url = urlArchivo(e.imagen);
+    if (url) {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = e.nombre_espanol;
+      img.loading = "lazy";
+      art.appendChild(img);
+    } else {
+      const ph = document.createElement("div");
+      ph.className = "sin-imagen";
+      ph.textContent = e.nombre_espanol.charAt(0);
+      art.appendChild(ph);
+    }
+
+    const mz = document.createElement("h3");
+    mz.textContent = e.nombre_mazahua;
+    const es = document.createElement("p");
+    es.className = "es";
+    es.textContent = e.nombre_espanol;
+    art.append(mz, es);
+
+    if (e.categoria) {
+      const cat = document.createElement("span");
+      cat.className = "cat";
+      cat.textContent = e.categoria;
+      art.appendChild(cat);
+    }
+
+    const audios = document.createElement("div");
+    audios.className = "audios";
+       audios.append(botonAudio("🔊 Mazahua", e.audio_mazahua));
+    if (e.audio_espanol) {
+      audios.append(botonAudio("🔊 Español", e.audio_espanol));
+    }
+    art.appendChild(audios);
+    return art;
+  }
+
+  function pintar() {
+    const q = norm(inBuscar.value.trim());
+    const cat = selCat.value;
+
+    const lista = todos.filter(
+      (e) =>
+        (!cat || e.categoria === cat) &&
+        (!q || norm(e.nombre_espanol).includes(q) || norm(e.nombre_mazahua).includes(q))
+    );
+
+    grid.replaceChildren(...lista.map(crearTarjeta));
+    estado.textContent = lista.length
+      ? `${lista.length} elemento(s)`
+      : "No se encontraron elementos.";
+  }
+
+  async function cargar() {
+    try {
+      const r = await fetch(`${API}/api/elementos`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      todos = await r.json();
+
+      const categorias = [...new Set(todos.map((e) => e.categoria).filter(Boolean))].sort();
+      for (const c of categorias as string[]) {
+        selCat.add(new Option(c, c));
+      }
+      pintar();
+    } catch {
+      estado.textContent =
+        "No se pudo conectar con la API. ¿Está corriendo uvicorn en el puerto 8000?";
+    }
+  }
+
+  inBuscar.addEventListener("input", pintar);
+  selCat.addEventListener("change", pintar);
+  cargar();
+</script>
+
+<style is:global>
+  .filtros { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .filtros input, .filtros select {
+    padding: 0.5rem 0.75rem;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font-size: 1rem;
+  }
+  .filtros input { flex: 1; min-width: 220px; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 1rem;
+  }
+  .tarjeta {
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 0.75rem;
+    text-align: center;
+  }
+  .tarjeta img, .sin-imagen {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 8px;
+    background: #f3e6d2;
+  }
+  .sin-imagen {
+    display: grid;
+    place-items: center;
+    font-size: 3rem;
+    color: var(--acento);
+  }
+  .tarjeta h3 { margin: 0.6rem 0 0; color: var(--acento); }
+  .es { margin: 0.1rem 0 0.4rem; }
+  .cat {
+    display: inline-block;
+    font-size: 0.75rem;
+    background: #f3e6d2;
+    border-radius: 999px;
+    padding: 0.1rem 0.6rem;
+  }
+  .audios { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.6rem; flex-wrap: wrap; }
+  .audios button {
+    border: 1px solid var(--acento);
+    background: #fff;
+    color: var(--acento);
+    border-radius: 8px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+  }
+  .audios button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #estado { margin-bottom: 1rem; }
+</style>

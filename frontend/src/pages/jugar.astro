@@ -1,0 +1,364 @@
+---
+import Base from "../layouts/Base.astro";
+---
+
+<Base titulo="Jugar">
+  <h2>Jugar a la lotería</h2>
+
+  <div class="controles">
+    <label>Baraja
+      <select id="modo">
+        <option value="tablero">Solo las cartas de mi tablero</option>
+        <option value="todas">Todas las cartas</option>
+      </select>
+    </label>
+    <button type="button" id="btn-nueva">Nueva partida</button>
+    <button type="button" id="btn-cantar" disabled>Cantar carta</button>
+  </div>
+
+  <p id="mensaje" role="status">Cargando…</p>
+
+  <div class="juego">
+    <section>
+      <h3>Mi tablero</h3>
+      <div id="tablero" class="tablero"></div>
+    </section>
+
+    <aside>
+      <h3>Carta cantada</h3>
+      <div id="actual" class="actual">
+        <p class="vacio">Pulsa «Cantar carta» para empezar.</p>
+      </div>
+      <button type="button" id="btn-repetir" disabled>🔊 Repetir audio</button>
+
+      <h3>Ya salieron <span id="contador"></span></h3>
+      <div id="historial" class="historial"></div>
+    </aside>
+  </div>
+</Base>
+
+<script>
+  import { API, urlArchivo } from "../config";
+
+  interface Elemento {
+    id: number;
+    nombre_espanol: string;
+    nombre_mazahua: string;
+    categoria: string | null;
+    imagen: string | null;
+    audio_mazahua: string | null;
+    audio_espanol: string | null;
+  }
+
+  const LADO = 4; // tablero de 4 x 4 = 16 cartas
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const tableroEl = $("tablero");
+  const actualEl = $("actual");
+  const historialEl = $("historial");
+  const contadorEl = $("contador");
+  const mensajeEl = $("mensaje");
+  const modoSel = $<HTMLSelectElement>("modo");
+  const btnNueva = $<HTMLButtonElement>("btn-nueva");
+  const btnCantar = $<HTMLButtonElement>("btn-cantar");
+  const btnRepetir = $<HTMLButtonElement>("btn-repetir");
+
+  let tablero: Elemento[] = [];
+  let baraja: Elemento[] = [];
+  let cantadas: Elemento[] = [];
+  let actual: Elemento | null = null;
+  let marcadas = new Set<number>();
+  let terminado = false;
+  let audio: HTMLAudioElement | null = null;
+
+  function avisar(texto: string, tipo: "ok" | "error" | "" = "") {
+    mensajeEl.textContent = texto;
+    mensajeEl.className = tipo;
+  }
+
+  function barajar<T>(lista: T[]): T[] {
+    const a = [...lista];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  // ---------- Audio: primero mazahua, luego español ----------
+  function detener() {
+    audio?.pause();
+    audio = null;
+  }
+
+  function reproducir(e: Elemento) {
+    detener();
+    const rutas = [e.audio_mazahua, e.audio_espanol]
+      .map(urlArchivo)
+      .filter((u): u is string => !!u);
+    let i = 0;
+    const siguiente = () => {
+      if (i >= rutas.length) return;
+      audio = new Audio(rutas[i++]);
+      audio.addEventListener("ended", siguiente);
+      audio.play().catch(() => avisar("No se pudo reproducir el audio.", "error"));
+    };
+    siguiente();
+  }
+
+  // ---------- Dibujo ----------
+  function imagenODe(e: Elemento, clase: string): HTMLElement {
+    const url = urlArchivo(e.imagen);
+    if (url) {
+      const img = document.createElement("img");
+      img.src = url;
+      img.alt = e.nombre_espanol;
+      img.className = clase;
+      return img;
+    }
+    const ph = document.createElement("div");
+    ph.className = `${clase} sin-img`;
+    ph.textContent = e.nombre_espanol.charAt(0);
+    return ph;
+  }
+
+  function pintarTablero() {
+    const casillas = tablero.map((e) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "casilla";
+      b.dataset.id = String(e.id);
+      if (marcadas.has(e.id)) b.classList.add("marcada");
+
+      const nombre = document.createElement("span");
+      nombre.textContent = e.nombre_mazahua;
+      b.append(imagenODe(e, "casilla-img"), nombre);
+      b.addEventListener("click", () => marcar(e));
+      return b;
+    });
+    tableroEl.replaceChildren(...casillas);
+  }
+
+  function pintarActual() {
+    if (!actual) {
+      actualEl.innerHTML = '<p class="vacio">Pulsa «Cantar carta» para empezar.</p>';
+      return;
+    }
+    const mz = document.createElement("h4");
+    mz.textContent = actual.nombre_mazahua;
+    const es = document.createElement("p");
+    es.textContent = actual.nombre_espanol;
+    actualEl.replaceChildren(imagenODe(actual, "actual-img"), mz, es);
+  }
+
+  function pintarHistorial() {
+    contadorEl.textContent = `(${cantadas.length}${modoSel.value === "tablero" ? ` de ${tablero.length}` : ""})`;
+    historialEl.replaceChildren(
+      ...[...cantadas].reverse().map((e) => {
+        const s = document.createElement("span");
+        s.className = "chip";
+        s.textContent = `${e.nombre_mazahua} · ${e.nombre_espanol}`;
+        return s;
+      })
+    );
+  }
+
+  // ---------- Reglas ----------
+  function hayLinea(): boolean {
+    const m = (f: number, c: number) => marcadas.has(tablero[f * LADO + c].id);
+    for (let i = 0; i < LADO; i++) {
+      if ([...Array(LADO).keys()].every((j) => m(i, j))) return true; // fila
+      if ([...Array(LADO).keys()].every((j) => m(j, i))) return true; // columna
+    }
+    if ([...Array(LADO).keys()].every((i) => m(i, i))) return true; // diagonal
+    if ([...Array(LADO).keys()].every((i) => m(i, LADO - 1 - i))) return true; // diagonal
+    return false;
+  }
+
+  function terminar(texto: string) {
+    terminado = true;
+    btnCantar.disabled = true;
+    avisar(texto, "ok");
+  }
+
+  function marcar(e: Elemento) {
+    if (terminado || marcadas.has(e.id)) return;
+    if (!cantadas.some((c) => c.id === e.id)) {
+      avisar(`«${e.nombre_mazahua}» todavía no ha salido.`, "error");
+      return;
+    }
+    marcadas.add(e.id);
+    tableroEl
+      .querySelector(`[data-id="${e.id}"]`)
+      ?.classList.add("marcada");
+    avisar("¡Bien! Carta marcada.", "ok");
+    if (hayLinea()) terminar("🎉 ¡Lotería! Completaste una línea.");
+  }
+
+  function cantar() {
+    if (terminado) return;
+    const siguiente = baraja.shift();
+    if (!siguiente) {
+      terminar("Se acabó la baraja. ¡Fin de la partida!");
+      return;
+    }
+    actual = siguiente;
+    cantadas.push(siguiente);
+    pintarActual();
+    pintarHistorial();
+    btnRepetir.disabled = false;
+    reproducir(siguiente);
+    avisar("Busca la carta en tu tablero y púlsala.");
+    if (baraja.length === 0) btnCantar.textContent = "Última carta cantada";
+  }
+
+  // ---------- Partida nueva ----------
+  async function errorDe(r: Response): Promise<string> {
+    try {
+      const d = await r.json();
+      if (typeof d.detail === "string") return d.detail;
+    } catch {}
+    return `Error ${r.status}`;
+  }
+
+  async function nuevaPartida() {
+    detener();
+    btnNueva.disabled = true;
+    btnCantar.disabled = true;
+    btnRepetir.disabled = true;
+    btnCantar.textContent = "Cantar carta";
+    terminado = false;
+    actual = null;
+    cantadas = [];
+    marcadas = new Set();
+    pintarActual();
+    pintarHistorial();
+    avisar("Preparando partida…");
+
+    try {
+      const rt = await fetch(`${API}/api/juego/tablero?tamano=${LADO * LADO}`);
+      if (!rt.ok) throw new Error(await errorDe(rt));
+      tablero = await rt.json();
+
+      if (modoSel.value === "todas") {
+        const rb = await fetch(`${API}/api/juego/baraja`);
+        if (!rb.ok) throw new Error(await errorDe(rb));
+        baraja = await rb.json();
+      } else {
+        baraja = barajar(tablero);
+      }
+
+      pintarTablero();
+      pintarHistorial();
+      btnCantar.disabled = false;
+      avisar("Partida lista. Pulsa «Cantar carta».");
+    } catch (err) {
+      tablero = [];
+      tableroEl.replaceChildren();
+      const msg = (err as Error).message;
+      avisar(
+        msg.includes("fetch")
+          ? "No se pudo conectar con la API. ¿Está corriendo uvicorn?"
+          : msg,
+        "error"
+      );
+    } finally {
+      btnNueva.disabled = false;
+    }
+  }
+
+  btnNueva.addEventListener("click", nuevaPartida);
+  btnCantar.addEventListener("click", cantar);
+  btnRepetir.addEventListener("click", () => actual && reproducir(actual));
+  modoSel.addEventListener("change", nuevaPartida);
+  nuevaPartida();
+</script>
+
+<style is:global>
+  .controles { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; margin-bottom: 0.5rem; }
+  .controles label { font-size: 0.9rem; font-weight: 600; }
+  .controles select {
+    display: block;
+    margin-top: 0.25rem;
+    padding: 0.45rem 0.6rem;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+    font: inherit;
+  }
+  .controles button, #btn-repetir {
+    border: 1px solid var(--acento);
+    background: var(--acento);
+    color: #fff;
+    border-radius: 8px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    font: inherit;
+  }
+  #btn-nueva, #btn-repetir { background: #fff; color: var(--acento); }
+  .controles button:disabled, #btn-repetir:disabled { opacity: 0.45; cursor: not-allowed; }
+
+  #mensaje { min-height: 1.4em; font-weight: 600; }
+  #mensaje.ok { color: #1f7a3a; }
+  #mensaje.error { color: #b3261e; }
+
+  .juego { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; align-items: start; }
+  @media (max-width: 800px) { .juego { grid-template-columns: 1fr; } }
+  .juego h3 { color: var(--acento); margin: 0.5rem 0; }
+
+  .tablero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
+  .casilla {
+    position: relative;
+    background: var(--tarjeta);
+    border: 2px solid var(--borde);
+    border-radius: 10px;
+    padding: 0.35rem;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--texto);
+  }
+  .casilla:hover { border-color: var(--acento); }
+  .casilla-img, .actual-img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: 6px;
+    background: #f3e6d2;
+  }
+  .sin-img { display: grid; place-items: center; font-size: 2rem; color: var(--acento); }
+  .casilla.marcada { border-color: #1f7a3a; background: #e6f4ea; }
+  .casilla.marcada::after {
+    content: "✔";
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    font-size: 1.4rem;
+    color: #1f7a3a;
+    text-shadow: 0 0 3px #fff;
+  }
+
+  .actual {
+    background: var(--tarjeta);
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 0.75rem;
+    text-align: center;
+    margin-bottom: 0.5rem;
+  }
+  .actual h4 { margin: 0.5rem 0 0; font-size: 1.5rem; color: var(--acento); }
+  .actual p { margin: 0.1rem 0 0; }
+  .actual .vacio { color: #7a6a58; }
+
+  .historial { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .chip {
+    background: #f3e6d2;
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    font-size: 0.8rem;
+  }
+</style>
