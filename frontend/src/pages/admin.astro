@@ -2,320 +2,822 @@
 import Base from "../layouts/Base.astro";
 ---
 
-<Base titulo="Administrar">
-  <h2>Administrar vocabulario</h2>
+<Base titulo="Docentes">
 
-  <form id="form" class="form">
-    <h3 id="titulo-form">Agregar elemento</h3>
-    <input type="hidden" id="id" />
+  <h2 class="titulo-admin">Zona de docentes</h2>
 
-    <div class="campos">
-      <label>Español *
-        <input id="nombre_espanol" required maxlength="100" />
-      </label>
-      <label>Mazahua *
-        <input id="nombre_mazahua" required maxlength="100" />
-      </label>
-      <label>Categoría
-        <input id="categoria" list="lista-categorias" maxlength="50" />
-        <datalist id="lista-categorias"></datalist>
-      </label>
-      <label>UID RFID
-        <input id="uid_rfid" maxlength="20" placeholder="Ej. 04A3B21C" />
-      </label>
+  <!-- Acceso de docentes -->
+  <div id="acceso" class="acceso-layout">
+
+    <!-- Formulario -->
+    <section class="tarjeta-admin formulario-docente">
+      <h3 id="titulo-recuadro" class="titulo-recuadro">Regístrate aquí</h3>
+
+      <!-- Formulario para iniciar sesión -->
+      <form id="form-login">
+
+        <label>
+          Correo
+          <input
+            id="l-correo"
+            type="email"
+            autocomplete="email"
+            required
+          />
+        </label>
+
+        <label>
+          Contraseña
+          <input
+            id="l-pass"
+            type="password"
+            autocomplete="current-password"
+            required
+          />
+        </label>
+
+        <div class="botones-docente">
+          <button class="btn btn-entrar" type="submit">
+            Entrar
+          </button>
+
+          <button
+            class="btn btn-registro"
+            type="button"
+            id="ir-registro"
+          >
+            Crear cuenta
+          </button>
+        </div>
+
+      </form>
+
+      <!-- Formulario para crear cuenta -->
+      <form id="form-registro" hidden>
+
+        <label>
+          Nombre
+          <input
+            id="r-nombre"
+            type="text"
+            autocomplete="name"
+            minlength="2"
+            required
+          />
+        </label>
+
+        <label>
+          Correo
+          <input
+            id="r-correo"
+            type="email"
+            autocomplete="email"
+            required
+          />
+        </label>
+
+        <label>
+          Contraseña (mínimo 8 caracteres)
+          <input
+            id="r-pass"
+            type="password"
+            autocomplete="new-password"
+            minlength="8"
+            required
+          />
+        </label>
+
+        <label>
+          Código de docente
+          <small>(Solo si tu institución te lo dio)</small>
+          <input
+            id="r-codigo"
+            type="text"
+            autocomplete="off"
+          />
+        </label>
+
+        <div class="botones-docente">
+          <button class="btn btn-entrar" type="submit">
+            Crear cuenta
+          </button>
+
+          <button
+            class="btn btn-registro"
+            type="button"
+            id="ir-login"
+          >
+            Entrar
+          </button>
+        </div>
+
+      </form>
+
+    </section>
+
+    <!-- Imagen del docente -->
+    <div class="imagen-docente">
+      <img
+        src="/imagenes/docente.jpg"
+        alt="Docente de la Lotería Mazahua"
+      />
     </div>
 
-    <label>Descripción
-      <textarea id="descripcion" rows="2"></textarea>
-    </label>
-
-    <div class="campos">
-      <label>Imagen (.jpg, .png, .webp)
-        <input type="file" id="imagen" accept=".jpg,.jpeg,.png,.webp" />
-      </label>
-      <label>Audio mazahua (.mp3, .wav, .ogg)
-        <input type="file" id="audio_mazahua" accept=".mp3,.wav,.ogg" />
-      </label>
-      <label>Audio español (.mp3, .wav, .ogg)
-        <input type="file" id="audio_espanol" accept=".mp3,.wav,.ogg" />
-      </label>
-    </div>
-    <p class="ayuda" id="ayuda-archivos"></p>
-
-    <div class="botones">
-      <button type="submit" id="btn-guardar">Agregar</button>
-      <button type="button" id="btn-cancelar" hidden>Cancelar edición</button>
-    </div>
-  </form>
-
-  <p id="mensaje" role="status"></p>
-
-  <div class="filtros">
-    <input id="buscar" type="search" placeholder="Buscar en la tabla…" />
   </div>
 
-  <div class="tabla-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Español</th>
-          <th>Mazahua</th>
-          <th>Categoría</th>
-          <th>Imagen</th>
-          <th>Audio MZ</th>
-          <th>Audio ES</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+  <!-- Panel del docente -->
+  <section id="panel" hidden>
+
+    <div class="tarjeta-admin">
+
+      <div class="fila-titulo">
+        <h3>
+          Hola, <span id="nombre-docente"></span>
+        </h3>
+
+        <button
+          class="btn secundario"
+          id="btn-salir"
+          type="button"
+        >
+          Cerrar sesión
+        </button>
+      </div>
+
+      <h4>Crear partida</h4>
+
+      <form id="form-partida">
+
+        <label>
+          Número de tableros
+          <input
+            id="tableros"
+            type="number"
+            min="1"
+            max="40"
+            value="4"
+            required
+          />
+        </label>
+
+        <label>
+          Cartas por tablero
+          <select id="cartas">
+            <option value="9">9 cartas (3 × 3)</option>
+            <option value="16" selected>16 cartas (4 × 4)</option>
+          </select>
+        </label>
+
+        <button class="btn" type="submit">
+          Crear partida
+        </button>
+
+      </form>
+
+    </div>
+
+    <div class="tarjeta-admin">
+
+      <h3>Mis partidas</h3>
+
+      <ul id="lista-partidas" class="lista-partidas"></ul>
+
+      <p id="sin-partidas" class="vacio-admin">
+        Todavía no has creado partidas.
+      </p>
+
+    </div>
+
+  </section>
+
+  <p id="aviso-admin" class="aviso-admin" role="status"></p>
+
 </Base>
 
 <script>
   import { API } from "../config";
 
-  interface Elemento {
-    id: number;
-    nombre_espanol: string;
-    nombre_mazahua: string;
-    descripcion: string | null;
-    categoria: string | null;
-    imagen: string | null;
-    audio_mazahua: string | null;
-    audio_espanol: string | null;
-    uid_rfid: string | null;
+  const CLAVE = "docente_token";
+
+  const $ = <T extends HTMLElement>(id: string) =>
+    document.getElementById(id) as T;
+
+  interface Partida {
+    codigo: string;
+    tableros: number;
+    cartas_por_tablero: number;
+    creado: string | null;
   }
 
-  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-
-  const form = $<HTMLFormElement>("form");
-  const tituloForm = $("titulo-form");
-  const ayuda = $("ayuda-archivos");
-  const mensaje = $("mensaje");
-  const tbody = $("tbody");
-  const btnGuardar = $<HTMLButtonElement>("btn-guardar");
-  const btnCancelar = $<HTMLButtonElement>("btn-cancelar");
-  const inBuscar = $<HTMLInputElement>("buscar");
-  const campos = ["id", "nombre_espanol", "nombre_mazahua", "categoria", "uid_rfid", "descripcion"];
-  const archivos = ["imagen", "audio_mazahua", "audio_espanol"];
-
-  let todos: Elemento[] = [];
-
-  const norm = (t: string) =>
-    t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
-
-  function avisar(texto: string, ok = true) {
-    mensaje.textContent = texto;
-    mensaje.className = ok ? "ok" : "error";
+  function avisar(texto: string, ok = false) {
+    const el = $("aviso-admin");
+    el.textContent = texto;
+    el.className = "aviso-admin " + (ok ? "ok" : "error");
   }
 
-  async function errorDe(r: Response): Promise<string> {
+  function mostrar(conSesion: boolean) {
+    $("acceso").hidden = conSesion;
+    $("panel").hidden = !conSesion;
+  }
+
+  function cerrarLocal() {
+    localStorage.removeItem(CLAVE);
+    mostrar(false);
+  }
+
+  // ---------- Conexión con API ----------
+  async function api(
+    ruta: string,
+    opciones: RequestInit = {}
+  ) {
+    const token = localStorage.getItem(CLAVE);
+
+    const r = await fetch(`${API}${ruta}`, {
+      ...opciones,
+      headers: {
+        "Content-Type": "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    if (!r.ok) {
+      let msg = `Error ${r.status}`;
+
+      try {
+        const d = await r.json();
+
+        if (typeof d.detail === "string") {
+          msg = d.detail;
+        } else if (Array.isArray(d.detail)) {
+          msg = "Revisa los datos: " + d.detail[0]?.msg;
+        }
+      } catch {}
+
+      const e = new Error(msg) as Error & {
+        status: number;
+      };
+
+      e.status = r.status;
+      throw e;
+    }
+
+    return r.json();
+  }
+
+  // ---------- Iniciar sesión ----------
+  function entrar(datos: { token: string; nombre: string }) {
+    localStorage.setItem(CLAVE, datos.token);
+
+    $("nombre-docente").textContent = datos.nombre;
+
+    avisar("");
+    mostrar(true);
+    cargarPartidas();
+  }
+
+  // ---------- Cambiar entre formularios ----------
+  function pestana(registro: boolean) {
+    $("form-login").hidden = registro;
+    $("form-registro").hidden = !registro;
+    $("titulo-recuadro").textContent = registro
+      ? "Crea tu cuenta aquí"
+      : "Regístrate aquí";
+    avisar("");
+  }
+
+  $("ir-registro").addEventListener("click", () => {
+    pestana(true);
+  });
+
+  $("ir-login").addEventListener("click", () => {
+    pestana(false);
+  });
+
+  // ---------- Entrar ----------
+  $("form-login").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    avisar("Verificando…", true);
+
     try {
-      const d = await r.json();
-      if (typeof d.detail === "string") return d.detail;
-      if (Array.isArray(d.detail)) return d.detail.map((x: any) => x.msg).join(", ");
-    } catch {}
-    return `Error ${r.status}`;
-  }
-
-  function limpiarFormulario() {
-    form.reset();
-    ($<HTMLInputElement>("id")).value = "";
-    tituloForm.textContent = "Agregar elemento";
-    btnGuardar.textContent = "Agregar";
-    btnCancelar.hidden = true;
-    ayuda.textContent = "";
-  }
-
-  function editar(e: Elemento) {
-    ($<HTMLInputElement>("id")).value = String(e.id);
-    ($<HTMLInputElement>("nombre_espanol")).value = e.nombre_espanol;
-    ($<HTMLInputElement>("nombre_mazahua")).value = e.nombre_mazahua;
-    ($<HTMLInputElement>("categoria")).value = e.categoria ?? "";
-    ($<HTMLInputElement>("uid_rfid")).value = e.uid_rfid ?? "";
-    ($<HTMLTextAreaElement>("descripcion")).value = e.descripcion ?? "";
-    for (const a of archivos) ($<HTMLInputElement>(a)).value = "";
-
-    tituloForm.textContent = `Editando: ${e.nombre_espanol}`;
-    btnGuardar.textContent = "Guardar cambios";
-    btnCancelar.hidden = false;
-    ayuda.textContent =
-      "Los archivos son opcionales: solo se reemplazan los que selecciones.";
-    form.scrollIntoView({ behavior: "smooth" });
-  }
-
-  async function eliminar(e: Elemento) {
-    if (!confirm(`¿Eliminar "${e.nombre_espanol}" y sus archivos? No se puede deshacer.`)) return;
-    try {
-      const r = await fetch(`${API}/api/elementos/${e.id}`, { method: "DELETE" });
-      if (!r.ok) throw new Error(await errorDe(r));
-      avisar(`"${e.nombre_espanol}" eliminado.`);
-      if ($<HTMLInputElement>("id").value === String(e.id)) limpiarFormulario();
-      await cargar();
-    } catch (err) {
-      avisar((err as Error).message, false);
-    }
-  }
-
-  const marca = (v: string | null) => (v ? "✔" : "—");
-
-  function fila(e: Elemento): HTMLTableRowElement {
-    const tr = document.createElement("tr");
-    const valores = [
-      String(e.id),
-      e.nombre_espanol,
-      e.nombre_mazahua,
-      e.categoria ?? "",
-      marca(e.imagen),
-      marca(e.audio_mazahua),
-      marca(e.audio_espanol),
-    ];
-    for (const v of valores) {
-      const td = document.createElement("td");
-      td.textContent = v;
-      tr.appendChild(td);
-    }
-
-    const acciones = document.createElement("td");
-    const bEditar = document.createElement("button");
-    bEditar.type = "button";
-    bEditar.textContent = "Editar";
-    bEditar.addEventListener("click", () => editar(e));
-    const bBorrar = document.createElement("button");
-    bBorrar.type = "button";
-    bBorrar.textContent = "Eliminar";
-    bBorrar.className = "peligro";
-    bBorrar.addEventListener("click", () => eliminar(e));
-    acciones.append(bEditar, bBorrar);
-    tr.appendChild(acciones);
-    return tr;
-  }
-
-  function pintar() {
-    const q = norm(inBuscar.value.trim());
-    const lista = todos.filter(
-      (e) =>
-        !q ||
-        norm(e.nombre_espanol).includes(q) ||
-        norm(e.nombre_mazahua).includes(q) ||
-        norm(e.categoria ?? "").includes(q)
-    );
-    tbody.replaceChildren(...lista.map(fila));
-  }
-
-  async function cargar() {
-    try {
-      const r = await fetch(`${API}/api/elementos`);
-      if (!r.ok) throw new Error(await errorDe(r));
-      todos = await r.json();
-
-      const dl = $("lista-categorias");
-      const cats = [...new Set(todos.map((e) => e.categoria).filter(Boolean))].sort();
-      dl.replaceChildren(...(cats as string[]).map((c) => new Option(c, c)));
-      pintar();
-    } catch {
-      avisar("No se pudo conectar con la API. ¿Está corriendo uvicorn?", false);
-    }
-  }
-
-  form.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    const id = $<HTMLInputElement>("id").value;
-
-    // Solo se envían los campos con contenido (evita sobrescribir con vacíos)
-    const fd = new FormData();
-    for (const c of campos.filter((c) => c !== "id")) {
-      const el = $<HTMLInputElement | HTMLTextAreaElement>(c);
-      let v = el.value.trim();
-      if (c === "uid_rfid") v = v.toUpperCase();
-      if (v) fd.append(c, v);
-    }
-    for (const a of archivos) {
-      const f = $<HTMLInputElement>(a).files?.[0];
-      if (f) fd.append(a, f);
-    }
-
-    btnGuardar.disabled = true;
-    try {
-      const r = await fetch(`${API}/api/elementos${id ? `/${id}` : ""}`, {
-        method: id ? "PUT" : "POST",
-        body: fd,
+      const d = await api("/api/admin/login", {
+        method: "POST",
+        body: JSON.stringify({
+          correo: $<HTMLInputElement>("l-correo").value,
+          password: $<HTMLInputElement>("l-pass").value,
+        }),
       });
-      if (!r.ok) throw new Error(await errorDe(r));
-      const guardado: Elemento = await r.json();
-      avisar(id ? `"${guardado.nombre_espanol}" actualizado.` : `"${guardado.nombre_espanol}" agregado.`);
-      limpiarFormulario();
-      await cargar();
+
+      $<HTMLInputElement>("l-pass").value = "";
+
+      entrar(d);
+
     } catch (err) {
-      avisar((err as Error).message, false);
-    } finally {
-      btnGuardar.disabled = false;
+      avisar((err as Error).message);
     }
   });
 
-  btnCancelar.addEventListener("click", limpiarFormulario);
-  inBuscar.addEventListener("input", pintar);
-  cargar();
+  // ---------- Crear cuenta ----------
+  $("form-registro").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    avisar("Creando cuenta…", true);
+
+    try {
+      const d = await api("/api/admin/registro", {
+        method: "POST",
+        body: JSON.stringify({
+          nombre: $<HTMLInputElement>("r-nombre").value,
+          correo: $<HTMLInputElement>("r-correo").value,
+          password: $<HTMLInputElement>("r-pass").value,
+          codigo: $<HTMLInputElement>("r-codigo").value,
+        }),
+      });
+
+      $<HTMLInputElement>("r-pass").value = "";
+
+      entrar(d);
+
+    } catch (err) {
+      avisar((err as Error).message);
+    }
+  });
+
+  // ---------- Cerrar sesión ----------
+  $("btn-salir").addEventListener("click", async () => {
+    try {
+      await api("/api/admin/salir", {
+        method: "POST",
+      });
+    } catch {}
+
+    cerrarLocal();
+    avisar("");
+  });
+
+  // ---------- Partidas ----------
+  function pintarPartidas(lista: Partida[]) {
+    $("sin-partidas").hidden = lista.length > 0;
+
+    $("lista-partidas").replaceChildren(
+      ...lista.map((p) => {
+
+        const li = document.createElement("li");
+        li.className = "partida";
+
+        const cod = document.createElement("span");
+        cod.className = "codigo-mini";
+        cod.textContent = p.codigo;
+
+        const info = document.createElement("span");
+        info.className = "info-partida";
+        info.textContent =
+          `${p.tableros} tableros · ${p.cartas_por_tablero} cartas`;
+
+        const copiar = document.createElement("button");
+        copiar.type = "button";
+        copiar.className = "btn secundario chico";
+        copiar.textContent = "Copiar código";
+
+        copiar.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(p.codigo);
+            avisar(`Código ${p.codigo} copiado.`, true);
+          } catch {
+            avisar(`Tu código es ${p.codigo}`, true);
+          }
+        });
+
+        const borrar = document.createElement("button");
+        borrar.type = "button";
+        borrar.className = "btn secundario chico peligro";
+        borrar.textContent = "Eliminar";
+
+        borrar.addEventListener("click", async () => {
+          if (!confirm(`¿Eliminar la partida ${p.codigo}?`)) return;
+
+          try {
+            await api(`/api/admin/partidas/${p.codigo}`, {
+              method: "DELETE",
+            });
+
+            avisar("Partida eliminada.", true);
+            cargarPartidas();
+
+          } catch (err) {
+            avisar((err as Error).message);
+          }
+        });
+
+        li.append(cod, info, copiar, borrar);
+        return li;
+      })
+    );
+  }
+
+  async function cargarPartidas() {
+    try {
+      pintarPartidas(
+        await api("/api/admin/partidas")
+      );
+
+    } catch (err) {
+      if ((err as { status?: number }).status === 401) {
+        cerrarLocal();
+        avisar("Tu sesión expiró. Inicia sesión de nuevo.");
+      } else {
+        avisar((err as Error).message);
+      }
+    }
+  }
+
+  // ---------- Crear partida ----------
+  $("form-partida").addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    avisar("Creando partida…", true);
+
+    try {
+      const p: Partida = await api("/api/admin/partidas", {
+        method: "POST",
+        body: JSON.stringify({
+          tableros: Number(
+            $<HTMLInputElement>("tableros").value
+          ),
+          cartas_por_tablero: Number(
+            $<HTMLSelectElement>("cartas").value
+          ),
+        }),
+      });
+
+      avisar(`Partida creada. Código: ${p.codigo}`, true);
+      cargarPartidas();
+
+    } catch (err) {
+      avisar((err as Error).message);
+    }
+  });
+
+  // ---------- Al cargar la página ----------
+  (async function iniciar() {
+
+    if (!localStorage.getItem(CLAVE)) {
+      return mostrar(false);
+    }
+
+    try {
+      const d = await api("/api/admin/yo");
+
+      $("nombre-docente").textContent = d.nombre;
+
+      mostrar(true);
+      cargarPartidas();
+
+    } catch {
+      cerrarLocal();
+    }
+
+  })();
 </script>
 
 <style is:global>
-  .form {
-    background: var(--tarjeta);
-    border: 1px solid var(--borde);
-    border-radius: 12px;
-    padding: 1rem 1.25rem;
-    margin-bottom: 1rem;
+
+  /* ---------- Título ---------- */
+
+  .titulo-admin {
+    text-align: center;
+    color: #111;
+    font-size: clamp(2.2rem, 4.2vw, 3.3rem);
+    margin: 0 0 2rem;
   }
-  .form h3 { margin-top: 0; color: var(--acento); }
-  .form label { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.6rem; }
-  .form input:not([type="file"]), .form textarea {
+
+  [hidden] {
+    display: none !important;
+  }
+
+  /* ---------- Distribución principal ---------- */
+
+  .acceso-layout {
+    width: 96%;
+    max-width: 1380px;
+    margin: 25px auto 2rem;
+    display: grid;
+    grid-template-columns: minmax(380px, 1.2fr) minmax(360px, 1fr);
+    align-items: start;
+    gap: 42px;
+  }
+
+  /* ---------- Formulario ---------- */
+
+  .formulario-docente {
+    width: 100%;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 28px 40px 36px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: #fff;
+    border: 3px solid var(--vino);
+    border-radius: 24px;
+    box-shadow: 0 10px 0 var(--vino-osc);
+  }
+
+  .titulo-recuadro {
+    margin: 0 0 1.1rem;
+    text-align: center;
+    color: #111;
+    font-family: var(--titulos);
+    font-size: clamp(1.65rem, 2.4vw, 2.2rem);
+    line-height: 1.15;
+  }
+
+  .formulario-docente form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .formulario-docente label {
+    display: grid;
+    gap: 8px;
+    color: #111;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .formulario-docente input {
+    width: 100%;
+    height: 60px;
+    box-sizing: border-box;
+    padding: 14px 18px;
+    border: 2px solid #dfb6c5;
+    border-radius: 12px;
+    font: inherit;
+    font-size: 18px;
+    color: #111;
+    background: white;
+  }
+
+  .formulario-docente input:focus {
+    outline: 3px solid var(--oro);
+    border-color: var(--vino);
+  }
+
+  .formulario-docente small {
+    font-weight: 400;
+    font-size: 15px;
+    color: #7a6a58;
+  }
+
+  /* ---------- Botones inferiores ---------- */
+
+  .botones-docente {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+    margin-top: 6px;
+  }
+
+  .botones-docente button {
+    flex: 1;
+    min-width: 0;
+    min-height: 60px;
+    padding: 14px 16px;
+    border-radius: 32px;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+
+  .botones-docente button:hover {
+    transform: translateY(-3px);
+  }
+
+  .btn-entrar {
+    background: var(--vino);
+    color: white;
+    border: 2px solid var(--vino);
+  }
+
+  .btn-registro {
+    background: white;
+    color: #111;
+    border: 2px solid var(--vino);
+  }
+
+  /* ---------- Imagen del docente ---------- */
+
+  .imagen-docente {
+    width: 100%;
+    height: auto;
+    min-height: 420px;
+    border-radius: 26px;
+    overflow: hidden;
+    border: 5px solid white;
+    box-shadow: 0 12px 28px rgba(74, 15, 36, 0.25);
+    background: #fdf8ee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .imagen-docente img {
     display: block;
     width: 100%;
-    margin-top: 0.25rem;
-    padding: 0.45rem 0.6rem;
-    border: 1px solid var(--borde);
-    border-radius: 8px;
-    font: inherit;
+    height: auto;
+    object-fit: contain;
+    object-position: center;
   }
-  .form input[type="file"] { display: block; margin-top: 0.25rem; max-width: 100%; }
-  .campos {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 0 1rem;
-  }
-  .ayuda { font-size: 0.85rem; color: #7a6a58; margin: 0 0 0.5rem; min-height: 1em; }
-  .botones { display: flex; gap: 0.5rem; flex-wrap: wrap; }
-  .botones button, td button {
-    border: 1px solid var(--acento);
-    background: var(--acento);
-    color: #fff;
-    border-radius: 8px;
-    padding: 0.45rem 0.9rem;
-    cursor: pointer;
-    font: inherit;
-  }
-  .botones button:disabled { opacity: 0.5; cursor: wait; }
-  #btn-cancelar { background: #fff; color: var(--acento); }
 
-  #mensaje { min-height: 1.4em; font-weight: 600; }
-  #mensaje.ok { color: #1f7a3a; }
-  #mensaje.error { color: #b3261e; }
+  /* ---------- Panel de administración ---------- */
 
-  .tabla-wrap { overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; background: var(--tarjeta); }
-  th, td { padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--borde); text-align: left; white-space: nowrap; }
-  th { background: #f3e6d2; }
-  td button { padding: 0.25rem 0.6rem; margin-right: 0.3rem; background: #fff; color: var(--acento); }
-  td button.peligro { color: #b3261e; border-color: #b3261e; }
-  .filtros { margin: 1rem 0 0.5rem; }
-  .filtros input {
+  #panel {
+    width: 94%;
+    max-width: 1100px;
+    margin: 25px auto;
+  }
+
+  .tarjeta-admin {
     width: 100%;
-    max-width: 380px;
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--borde);
-    border-radius: 8px;
+    max-width: 520px;
+    margin: 0 auto 1.2rem;
+    background: #fff;
+    border: 4px solid var(--vino);
+    border-radius: 22px;
+    padding: 1.2rem 1.4rem;
+    box-shadow: 0 8px 0 var(--vino-osc);
+    box-sizing: border-box;
+  }
+
+  .tarjeta-admin h3 {
+    margin: 0 0 0.8rem;
+    color: #111;
+  }
+
+  .tarjeta-admin h4 {
+    margin: 0.4rem 0 0.6rem;
+    color: #111;
+  }
+
+  .tarjeta-admin form {
+    display: grid;
+    gap: 0.9rem;
+  }
+
+  .tarjeta-admin label {
+    display: grid;
+    gap: 0.3rem;
+    color: #111;
+    font-weight: 600;
+  }
+
+  .tarjeta-admin input,
+  .tarjeta-admin select {
+    font: inherit;
+    padding: 0.6rem 0.8rem;
+    border: 2px solid #d9c3cc;
+    border-radius: 12px;
+    color: #111;
+  }
+
+  .tarjeta-admin input:focus,
+  .tarjeta-admin select:focus {
+    outline: 3px solid var(--oro);
+    border-color: var(--vino);
+  }
+
+  .fila-titulo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .fila-titulo h3 {
+    margin: 0;
+  }
+
+  .btn.secundario {
+    background: #fff;
+    color: #111;
+    border: 2px solid var(--vino);
+    box-shadow: none;
+    padding: 0.4rem 0.9rem;
+    min-height: 0;
     font-size: 1rem;
   }
+
+  .btn.chico {
+    padding: 0.3rem 0.7rem;
+    font-size: 0.9rem;
+  }
+
+  .btn.peligro {
+    color: #a3262a;
+    border-color: #a3262a;
+  }
+
+  .lista-partidas {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 0.6rem;
+  }
+
+  .partida {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    background: #fbf3e4;
+    border-radius: 14px;
+  }
+
+  .codigo-mini {
+    font-family: var(--titulos);
+    font-weight: 800;
+    font-size: 1.4rem;
+    letter-spacing: 3px;
+    color: #111;
+  }
+
+  .info-partida {
+    flex: 1;
+    font-size: 0.95rem;
+    color: #111;
+  }
+
+  .vacio-admin {
+    margin: 0;
+    color: #7a6a58;
+    text-align: center;
+  }
+
+  .aviso-admin {
+    text-align: center;
+    font-weight: 700;
+    min-height: 1.5em;
+  }
+
+  .aviso-admin.ok {
+    color: var(--verde);
+  }
+
+  .aviso-admin.error {
+    color: #111;
+  }
+
+  /* ---------- Adaptación a celulares ---------- */
+
+  @media (max-width: 900px) {
+
+    .acceso-layout {
+      grid-template-columns: 1fr;
+      align-items: center;
+      max-width: 720px;
+      gap: 28px;
+    }
+
+    .imagen-docente {
+      height: 400px;
+      min-height: 360px;
+    }
+
+  }
+
+  @media (max-width: 500px) {
+
+    .formulario-docente {
+      padding: 24px 18px;
+      min-height: auto;
+    }
+
+    .formulario-docente label {
+      font-size: 17px;
+    }
+
+    .formulario-docente input {
+      height: 52px;
+      font-size: 16px;
+    }
+
+    .botones-docente button {
+      font-size: 15px;
+      min-height: 52px;
+    }
+
+    .imagen-docente {
+      height: 300px;
+      min-height: 280px;
+    }
+
+  }
+
 </style>
+```[cite: 1]

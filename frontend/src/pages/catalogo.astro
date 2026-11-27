@@ -3,16 +3,30 @@ import Base from "../layouts/Base.astro";
 ---
 
 <Base titulo="Catálogo">
-  <h2>Catálogo de vocabulario</h2>
+  <section class="hero">
+    <div class="hero-texto">
+      <p class="etiqueta">✳ Lengua mazahua</p>
+      <h2>Escucha, mira y aprende</h2>
+      <p class="sub">
+        Cada carta guarda una palabra. Tócala y escucha cómo se dice en mazahua.
+      </p>
+      <div class="hero-botones">
+        <a class="btn dorado" href="/jugar">🎲 Jugar lotería</a>
+        <a class="btn claro" href="#palabras">📖 Ver las palabras</a>
+      </div>
+    </div>
+    <div id="hero-cartas" class="hero-cartas" aria-hidden="true"></div>
+  </section>
 
-  <div class="filtros">
-    <input id="buscar" type="search" placeholder="Buscar en español o mazahua…" />
-    <select id="categoria">
-      <option value="">Todas las categorías</option>
-    </select>
+  <h2 id="palabras" class="titulo-pagina">Todas las palabras</h2>
+
+  <div class="buscador">
+    <input id="buscar" type="search" placeholder="🔎 Busca una palabra…" />
   </div>
 
-  <p id="estado" role="status">Cargando…</p>
+  <div id="chips" class="chips" aria-label="Categorías"></div>
+
+  <p id="estado" role="status" class="estado">Cargando…</p>
   <section id="grid" class="grid"></section>
 </Base>
 
@@ -26,97 +40,159 @@ import Base from "../layouts/Base.astro";
     categoria: string | null;
     imagen: string | null;
     audio_mazahua: string | null;
-    audio_espanol: string | null;
   }
+
+  const ICONOS: Record<string, string> = {
+    animales: "🐾",
+    naturaleza: "🌳",
+    "alimentos y cultivos": "🌽",
+    familia: "👨‍👩‍👧",
+    cuerpo: "🖐️",
+    objetos: "✏️",
+    lugares: "🏠",
+    emociones: "😊",
+    acciones: "🏃",
+    saludos: "👋",
+  };
+  const icono = (c: string | null) => (c && ICONOS[c]) || "⭐";
+  const bonito = (t: string) => t.charAt(0).toUpperCase() + t.slice(1);
 
   const grid = document.getElementById("grid")!;
   const estado = document.getElementById("estado")!;
+  const chipsEl = document.getElementById("chips")!;
+  const heroCartas = document.getElementById("hero-cartas")!;
   const inBuscar = document.getElementById("buscar") as HTMLInputElement;
-  const selCat = document.getElementById("categoria") as HTMLSelectElement;
 
   let todos: Elemento[] = [];
-  let audioActual: HTMLAudioElement | null = null;
+  let categoriaActual = "";
+  let audio: HTMLAudioElement | null = null;
+  let tarjetaSonando: HTMLElement | null = null;
 
-  // Quita acentos y mayúsculas para buscar de forma flexible
   const norm = (t: string) =>
     t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-  function reproducir(ruta: string | null) {
-    const url = urlArchivo(ruta);
-    if (!url) return;
-    audioActual?.pause();
-    audioActual = new Audio(url);
-    audioActual.play().catch(() => {
-      estado.textContent = "No se pudo reproducir el audio.";
-    });
+  function detener() {
+    audio?.pause();
+    audio = null;
+    tarjetaSonando?.classList.remove("sonando");
+    tarjetaSonando = null;
   }
 
-  function botonAudio(texto: string, ruta: string | null): HTMLButtonElement {
-    const b = document.createElement("button");
-    b.type = "button";
-    b.textContent = texto;
-    b.disabled = !ruta;
-    b.title = ruta ? "" : "Aún no hay audio";
-    b.addEventListener("click", () => reproducir(ruta));
-    return b;
+  function reproducir(ruta: string | null, tarjeta: HTMLElement) {
+    const url = urlArchivo(ruta);
+    if (!url) {
+      estado.textContent = "Esta palabra todavía no tiene audio.";
+      return;
+    }
+    detener();
+    audio = new Audio(url);
+    tarjetaSonando = tarjeta;
+    tarjeta.classList.add("sonando");
+    audio.addEventListener("ended", detener);
+    audio.play().catch(() => {
+      detener();
+      estado.textContent = "No se pudo reproducir el audio.";
+    });
   }
 
   function crearTarjeta(e: Elemento): HTMLElement {
     const art = document.createElement("article");
     art.className = "tarjeta";
+    art.dataset.cat = e.categoria ?? "";
+    art.tabIndex = 0;
+    art.setAttribute("role", "button");
+    art.setAttribute("aria-label", `${e.nombre_mazahua}, ${e.nombre_espanol}. Toca para escuchar.`);
+
+    const num = document.createElement("span");
+    num.className = "num";
+    num.textContent = `N.º ${String(e.id).padStart(2, "0")}`;
 
     const url = urlArchivo(e.imagen);
+    let imagen: HTMLElement;
     if (url) {
       const img = document.createElement("img");
       img.src = url;
       img.alt = e.nombre_espanol;
       img.loading = "lazy";
-      art.appendChild(img);
+      imagen = img;
     } else {
-      const ph = document.createElement("div");
-      ph.className = "sin-imagen";
-      ph.textContent = e.nombre_espanol.charAt(0);
-      art.appendChild(ph);
+      imagen = document.createElement("div");
+      imagen.className = "sin-imagen";
+      imagen.textContent = e.nombre_espanol.charAt(0);
     }
 
+    const pie = document.createElement("div");
+    pie.className = "pie";
     const mz = document.createElement("h3");
     mz.textContent = e.nombre_mazahua;
     const es = document.createElement("p");
     es.className = "es";
     es.textContent = e.nombre_espanol;
-    art.append(mz, es);
+    const sonido = document.createElement("span");
+    sonido.className = "escucha";
+    sonido.textContent = e.audio_mazahua ? "🔊 Escuchar" : "🔇 Sin audio";
+    pie.append(mz, es, sonido);
 
-    if (e.categoria) {
-      const cat = document.createElement("span");
-      cat.className = "cat";
-      cat.textContent = e.categoria;
-      art.appendChild(cat);
-    }
+    art.append(num, imagen, pie);
 
-    const audios = document.createElement("div");
-    audios.className = "audios";
-       audios.append(botonAudio("🔊 Mazahua", e.audio_mazahua));
-    if (e.audio_espanol) {
-      audios.append(botonAudio("🔊 Español", e.audio_espanol));
-    }
-    art.appendChild(audios);
+    art.addEventListener("click", () => reproducir(e.audio_mazahua, art));
+    art.addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter" || ev.key === " ") {
+        ev.preventDefault();
+        reproducir(e.audio_mazahua, art);
+      }
+    });
     return art;
   }
 
   function pintar() {
+    detener();
     const q = norm(inBuscar.value.trim());
-    const cat = selCat.value;
-
     const lista = todos.filter(
       (e) =>
-        (!cat || e.categoria === cat) &&
+        (!categoriaActual || e.categoria === categoriaActual) &&
         (!q || norm(e.nombre_espanol).includes(q) || norm(e.nombre_mazahua).includes(q))
     );
-
     grid.replaceChildren(...lista.map(crearTarjeta));
     estado.textContent = lista.length
-      ? `${lista.length} elemento(s)`
-      : "No se encontraron elementos.";
+      ? `${lista.length} palabras para aprender`
+      : "No encontré esa palabra. ¡Prueba con otra!";
+  }
+
+  function crearChip(valor: string, texto: string, ic: string): HTMLButtonElement {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "chip" + (valor === categoriaActual ? " activo" : "");
+    b.dataset.cat = valor;
+    b.textContent = `${ic} ${texto}`;
+    b.addEventListener("click", () => {
+      categoriaActual = valor;
+      chipsEl.querySelectorAll(".chip").forEach((c) =>
+        c.classList.toggle("activo", (c as HTMLElement).dataset.cat === valor)
+      );
+      pintar();
+    });
+    return b;
+  }
+
+  // Tres cartas al azar decoran la portada
+  function pintarHero() {
+    const conImagen = todos.filter((e) => e.imagen);
+    const elegidas = [...conImagen].sort(() => Math.random() - 0.5).slice(0, 3);
+    heroCartas.replaceChildren(
+      ...elegidas.map((e) => {
+        const d = document.createElement("div");
+        d.className = "mini";
+        d.dataset.cat = e.categoria ?? "";
+        const img = document.createElement("img");
+        img.src = urlArchivo(e.imagen)!;
+        img.alt = "";
+        const t = document.createElement("span");
+        t.textContent = e.nombre_mazahua;
+        d.append(img, t);
+        return d;
+      })
+    );
   }
 
   async function cargar() {
@@ -125,75 +201,156 @@ import Base from "../layouts/Base.astro";
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
       todos = await r.json();
 
-      const categorias = [...new Set(todos.map((e) => e.categoria).filter(Boolean))].sort();
-      for (const c of categorias as string[]) {
-        selCat.add(new Option(c, c));
-      }
+      const categorias = [...new Set(todos.map((e) => e.categoria).filter(Boolean))].sort() as string[];
+      chipsEl.replaceChildren(
+        crearChip("", "Todas", "🌈"),
+        ...categorias.map((c) => crearChip(c, bonito(c), icono(c)))
+      );
+      pintarHero();
       pintar();
     } catch {
-      estado.textContent =
-        "No se pudo conectar con la API. ¿Está corriendo uvicorn en el puerto 8000?";
+      estado.textContent = "No se pudo conectar con la API. ¿Está corriendo uvicorn en el puerto 8000?";
     }
   }
 
   inBuscar.addEventListener("input", pintar);
-  selCat.addEventListener("change", pintar);
   cargar();
 </script>
 
 <style is:global>
-  .filtros { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-bottom: 1rem; }
-  .filtros input, .filtros select {
-    padding: 0.5rem 0.75rem;
-    border: 1px solid var(--borde);
-    border-radius: 8px;
-    font-size: 1rem;
+  /* ---------- Portada ---------- */
+  .hero {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    align-items: center;
+    gap: 1.5rem;
+    background: var(--vino);
+    color: var(--crema);
+    border-radius: 28px;
+    padding: 2rem 2rem 2.2rem;
+    margin-bottom: 2rem;
+    border-bottom: 10px solid var(--oro);
   }
-  .filtros input { flex: 1; min-width: 220px; }
+  .hero .etiqueta { margin: 0 0 0.4rem; color: var(--oro); font-weight: 800; letter-spacing: 0.05em; }
+  .hero h2 { margin: 0 0 0.6rem; font-size: 2.8rem; line-height: 1.1; }
+  .hero .sub { margin: 0 0 1.4rem; font-size: 1.3rem; line-height: 1.5; max-width: 30rem; }
+  .hero-botones { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+  .hero-cartas { display: flex; justify-content: center; gap: 0.6rem; min-height: 180px; }
+  .mini {
+    --c: var(--oro);
+    width: 31%;
+    max-width: 150px;
+    background: #fffdf8;
+    border: 3px solid var(--c);
+    border-radius: 14px;
+    padding: 0.35rem;
+    text-align: center;
+    color: var(--vino-osc);
+    font-family: var(--titulos);
+    font-weight: 700;
+    box-shadow: 0 6px 0 rgba(0, 0, 0, 0.25);
+    animation: aparece-mini 0.5s ease-out both;
+  }
+  .mini:nth-child(1) { transform: rotate(-6deg); }
+  .mini:nth-child(2) { transform: translateY(14px) rotate(2deg); animation-delay: 0.1s; }
+  .mini:nth-child(3) { transform: rotate(7deg); animation-delay: 0.2s; }
+  .mini img { width: 100%; aspect-ratio: 1 / 1; object-fit: cover; border-radius: 8px; display: block; }
+  .mini span { display: block; margin-top: 0.2rem; font-size: 1rem; }
+  @keyframes aparece-mini { from { opacity: 0; margin-top: 20px; } to { opacity: 1; margin-top: 0; } }
+  @media (max-width: 800px) {
+    .hero { grid-template-columns: 1fr; padding: 1.5rem; }
+    .hero h2 { font-size: 2.1rem; }
+  }
 
+  /* ---------- Buscador y categorías ---------- */
+  .buscador { display: flex; justify-content: center; margin-bottom: 1rem; }
+  .buscador input {
+    width: 100%;
+    max-width: 480px;
+    padding: 0.8rem 1.2rem;
+    font-size: 1.25rem;
+    border: 3px solid var(--vino);
+    border-radius: 999px;
+    background: #fffdf8;
+  }
+  .buscador input:focus { outline: none; border-color: var(--oro); }
+
+  .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-bottom: 1rem; }
+  .chip {
+    --c: var(--vino);
+    border: 3px solid var(--c);
+    background: #fffdf8;
+    color: var(--texto);
+    border-radius: 999px;
+    padding: 0.45rem 1.05rem;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: transform 0.12s;
+  }
+  .chip:hover { transform: translateY(-3px); }
+  .chip.activo { background: var(--c); color: #fff; }
+
+  .estado { text-align: center; font-size: 1.15rem; font-weight: 700; min-height: 1.5em; }
+
+  /* ---------- Cartas ---------- */
   .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1.5rem;
   }
   .tarjeta {
-    background: var(--tarjeta);
-    border: 1px solid var(--borde);
-    border-radius: 12px;
-    padding: 0.75rem;
-    text-align: center;
-  }
-  .tarjeta img, .sin-imagen {
-    width: 100%;
-    aspect-ratio: 4 / 3;
-    object-fit: cover;
-    border-radius: 8px;
-    background: #f3e6d2;
-  }
-  .sin-imagen {
-    display: grid;
-    place-items: center;
-    font-size: 3rem;
-    color: var(--acento);
-  }
-  .tarjeta h3 { margin: 0.6rem 0 0; color: var(--acento); }
-  .es { margin: 0.1rem 0 0.4rem; }
-  .cat {
-    display: inline-block;
-    font-size: 0.75rem;
-    background: #f3e6d2;
-    border-radius: 999px;
-    padding: 0.1rem 0.6rem;
-  }
-  .audios { display: flex; gap: 0.4rem; justify-content: center; margin-top: 0.6rem; flex-wrap: wrap; }
-  .audios button {
-    border: 1px solid var(--acento);
-    background: #fff;
-    color: var(--acento);
-    border-radius: 8px;
-    padding: 0.3rem 0.6rem;
+    --c: var(--vino);
+    position: relative;
+    background: #fffdf8;
+    border: 4px solid var(--vino);
+    border-radius: 22px;
+    overflow: hidden;
     cursor: pointer;
+    box-shadow: 0 7px 0 var(--vino-osc);
+    transition: transform 0.12s, box-shadow 0.12s;
   }
-  .audios button:disabled { opacity: 0.4; cursor: not-allowed; }
-  #estado { margin-bottom: 1rem; }
+  .tarjeta:hover { transform: translateY(-5px); box-shadow: 0 12px 0 var(--vino-osc); }
+  .tarjeta:active { transform: translateY(5px); box-shadow: 0 2px 0 var(--vino-osc); }
+  .tarjeta:focus-visible { outline: 4px solid var(--oro); outline-offset: 3px; }
+
+  .num {
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    z-index: 1;
+    background: var(--vino);
+    color: var(--crema);
+    font-family: var(--titulos);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+  }
+  .tarjeta img,
+  .sin-imagen {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    background: #f6e7c8;
+  }
+  .sin-imagen { display: grid; place-items: center; font-size: 5rem; font-weight: 800; color: var(--c); font-family: var(--titulos); }
+  .pie { background: var(--c); color: #fff; text-align: center; padding: 0.7rem 0.6rem 0.9rem; }
+  .pie h3 { margin: 0; font-size: 1.9rem; line-height: 1.15; }
+  .pie .es { margin: 0.1rem 0 0.5rem; font-size: 1.3rem; opacity: 0.95; }
+  .escucha {
+    display: inline-block;
+    background: var(--crema);
+    color: var(--vino-osc);
+    border-radius: 999px;
+    padding: 0.3rem 1rem;
+    font-size: 1.05rem;
+    font-weight: 800;
+  }
+  .tarjeta.sonando { animation: latido 0.7s ease-in-out infinite; }
+  @keyframes latido {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
 </style>

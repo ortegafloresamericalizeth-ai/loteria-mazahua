@@ -3,37 +3,103 @@ import Base from "../layouts/Base.astro";
 ---
 
 <Base titulo="Jugar">
-  <h2>Jugar a la lotería</h2>
+  <!-- Paso 1: elegir cómo jugar -->
+  <div id="modos" class="contenedor-modos">
+    <h2 class="titulo-pagina">Jugar a la lotería</h2>
 
-  <div class="controles">
-    <label>Baraja
-      <select id="modo">
-        <option value="tablero">Solo las cartas de mi tablero</option>
-        <option value="todas">Todas las cartas</option>
-      </select>
-    </label>
-    <button type="button" id="btn-nueva">Nueva partida</button>
-    <button type="button" id="btn-cantar" disabled>Cantar carta</button>
-  </div>
+    <section class="modos">
+      <button type="button" class="modo-card con-codigo" id="modo-codigo">
+        <span class="modo-icono">🔒</span>
+        <strong>Jugar con código</strong>
+        <span>Tu docente te da un código para entrar a su partida.</span>
+      </button>
 
-  <p id="mensaje" role="status">Cargando…</p>
-
-  <div class="juego">
-    <section>
-      <h3>Mi tablero</h3>
-      <div id="tablero" class="tablero"></div>
+      <button type="button" class="modo-card libre" id="modo-libre">
+        <span class="modo-icono">🎲</span>
+        <strong>Jugar sin código</strong>
+        <span>Practica por tu cuenta, sin necesidad de un docente.</span>
+      </button>
     </section>
 
-    <aside>
-      <h3>Carta cantada</h3>
-      <div id="actual" class="actual">
-        <p class="vacio">Pulsa «Cantar carta» para empezar.</p>
-      </div>
-      <button type="button" id="btn-repetir" disabled>🔊 Repetir audio</button>
+    <div class="vitrina-cartas" aria-label="Cartas de ejemplo de la Lotería Mazahua">
+      <div id="cartas-preview" class="cartas-abanico"></div>
+    </div>
+  </div>
 
-      <h3>Ya salieron <span id="contador"></span></h3>
-      <div id="historial" class="historial"></div>
-    </aside>
+  <!-- Paso 2 (solo con código): escribir el código -->
+  <section id="entrada" class="entrada" hidden>
+    <h3>Escribe el código de tu partida</h3>
+    <p>Tu docente te lo da. Tiene 5 letras o números.</p>
+    <form id="form-codigo">
+      <input
+        id="codigo"
+        type="text"
+        maxlength="8"
+        autocomplete="off"
+        autocapitalize="characters"
+        placeholder="Ej. U3IF1"
+        required
+      />
+      <button class="btn grande" id="btn-entrar" type="submit">Entrar</button>
+    </form>
+    <p id="aviso-entrada" class="mensaje" role="status"></p>
+    <button type="button" id="btn-volver" class="enlace-btn">← Volver</button>
+  </section>
+
+  <!-- Paso 3: el juego -->
+  <div id="zona-juego" hidden>
+    <p class="etiqueta-partida">
+      <strong id="etiqueta-partida"></strong> ·
+      <button type="button" id="btn-cambiar" class="enlace-btn">Cambiar modo</button>
+    </p>
+
+    <details class="guia">
+      <summary> ¿Cómo se juega?</summary>
+      <ol>
+        <li><strong>Toca «Cantar carta»</strong> y se mostrará una carta.</li>
+        <li><strong>Escucha</strong> la palabra en mazahua.</li>
+        <li><strong>Busca la imagen</strong> en tu tablero y tócala para poner tu ficha.</li>
+        <li><strong>¡Lotería!</strong> Gana quien completa una fila, una columna o una diagonal.</li>
+      </ol>
+    </details>
+
+    <div class="barra">
+      <label id="lbl-tamano">Tablero
+        <select id="tamano">
+          <option value="9">9 cartas (3 × 3)</option>
+          <option value="16" selected>16 cartas (4 × 4)</option>
+        </select>
+      </label>
+      <label>Baraja
+        <select id="modo">
+          <option value="tablero">Solo las cartas de mi tablero</option>
+          <option value="todas">Todas las cartas</option>
+        </select>
+      </label>
+      <button type="button" class="btn grande" id="btn-nueva">Nueva partida</button>
+      <button type="button" class="btn grande" id="btn-cantar" disabled>Cantar carta</button>
+    </div>
+
+    <p id="mensaje" class="mensaje" role="status">Cargando…</p>
+
+    <div class="juego">
+      <section class="zona-tablero">
+        <h3>Mi tablero</h3>
+        <div id="tablero" class="tablero"></div>
+      </section>
+
+      <aside class="panel-carta">
+        <h3>Carta cantada</h3>
+        <div id="actual" class="actual">
+          <p class="vacio">Pulsa «Cantar carta» para empezar.</p>
+        </div>
+        <button type="button" class="btn" id="btn-repetir" disabled>🔊 Repetir audio</button>
+
+        <div class="progreso"><div id="relleno"></div></div>
+        <h3 class="contador">Ya salieron <span id="contador"></span></h3>
+        <div id="historial" class="historial"></div>
+      </aside>
+    </div>
   </div>
 </Base>
 
@@ -50,19 +116,38 @@ import Base from "../layouts/Base.astro";
     audio_espanol: string | null;
   }
 
-  const LADO = 4; // tablero de 4 x 4 = 16 cartas
+  interface Partida {
+    codigo: string;
+    tableros: number;
+    cartas_por_tablero: number;
+  }
+
+  const CLAVE = "codigo_partida";
 
   const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const modosEl = $("modos");
+  const entradaEl = $("entrada");
+  const zonaEl = $("zona-juego");
+  const cartasPreviewEl = $("cartas-preview");
+  const inputCodigo = $<HTMLInputElement>("codigo");
+  const btnEntrar = $<HTMLButtonElement>("btn-entrar");
+  const avisoEntradaEl = $("aviso-entrada");
+  const etiquetaEl = $("etiqueta-partida");
+  const lblTamano = $("lbl-tamano");
+  const tamanoSel = $<HTMLSelectElement>("tamano");
   const tableroEl = $("tablero");
   const actualEl = $("actual");
   const historialEl = $("historial");
   const contadorEl = $("contador");
+  const rellenoEl = $("relleno");
   const mensajeEl = $("mensaje");
   const modoSel = $<HTMLSelectElement>("modo");
   const btnNueva = $<HTMLButtonElement>("btn-nueva");
   const btnCantar = $<HTMLButtonElement>("btn-cantar");
   const btnRepetir = $<HTMLButtonElement>("btn-repetir");
 
+  let modoJuego: "codigo" | "libre" | null = null;
+  let lado = 4;
   let tablero: Elemento[] = [];
   let baraja: Elemento[] = [];
   let cantadas: Elemento[] = [];
@@ -71,9 +156,20 @@ import Base from "../layouts/Base.astro";
   let terminado = false;
   let audio: HTMLAudioElement | null = null;
 
-  function avisar(texto: string, tipo: "ok" | "error" | "" = "") {
+  function avisar(texto: string, tipo: "ok" | "aviso" | "" = "") {
     mensajeEl.textContent = texto;
-    mensajeEl.className = tipo;
+    mensajeEl.className = `mensaje ${tipo}`.trim();
+  }
+
+  function avisarEntrada(texto: string, tipo: "ok" | "aviso" | "" = "") {
+    avisoEntradaEl.textContent = texto;
+    avisoEntradaEl.className = `mensaje ${tipo}`.trim();
+  }
+
+  function mostrar(pantalla: "modos" | "entrada" | "juego") {
+    modosEl.hidden = pantalla !== "modos";
+    entradaEl.hidden = pantalla !== "entrada";
+    zonaEl.hidden = pantalla !== "juego";
   }
 
   function barajar<T>(lista: T[]): T[] {
@@ -85,7 +181,77 @@ import Base from "../layouts/Base.astro";
     return a;
   }
 
-  // ---------- Audio: primero mazahua, luego español ----------
+  const CARTAS_RESPALDO: Elemento[] = [
+    { id: -1, nombre_espanol: "Sol", nombre_mazahua: "Jyaru", categoria: null, imagen: null, audio_mazahua: null, audio_espanol: null },
+    { id: -2, nombre_espanol: "Libro", nombre_mazahua: "Skuama", categoria: null, imagen: null, audio_mazahua: null, audio_espanol: null },
+    { id: -3, nombre_espanol: "Árbol", nombre_mazahua: "Za'a", categoria: null, imagen: null, audio_mazahua: null, audio_espanol: null },
+  ];
+
+  function renderCartasPreview(lista: Elemento[]) {
+    const seleccion = barajar(lista).slice(0, 3);
+    const nodos = seleccion.map((e) => {
+      const card = document.createElement("article");
+      card.className = "carta-muestra";
+
+      const marco = document.createElement("div");
+      marco.className = "carta-muestra-img-wrap";
+
+      const url = urlArchivo(e.imagen);
+      if (url) {
+        const img = document.createElement("img");
+        img.src = url;
+        img.alt = e.nombre_espanol;
+        img.className = "carta-muestra-img";
+        marco.appendChild(img);
+      } else {
+        const ph = document.createElement("div");
+        ph.className = "carta-muestra-sin-img";
+        ph.textContent = e.nombre_mazahua.charAt(0).toUpperCase();
+        marco.appendChild(ph);
+      }
+
+      const titulo = document.createElement("span");
+      titulo.className = "carta-muestra-nombre";
+      titulo.textContent = e.nombre_mazahua;
+
+      card.append(marco, titulo);
+      return card;
+    });
+
+    cartasPreviewEl.replaceChildren(...nodos);
+  }
+
+  async function cargarCartasPreview() {
+    renderCartasPreview(CARTAS_RESPALDO);
+    try {
+      const r = await fetch(`${API}/api/juego/baraja`);
+      if (!r.ok) return;
+      const datos = (await r.json()) as Elemento[];
+      if (Array.isArray(datos) && datos.length >= 3) {
+        renderCartasPreview(datos);
+      }
+    } catch {}
+  }
+
+  function lanzarConfeti() {
+    const colores = ["#781c3b", "#e9a825", "#2f7d62", "#1f8a9e", "#f4c542", "#c0476b"];
+
+    const contenedor = document.createElement("div");
+    contenedor.className = "confeti";
+
+    for (let i = 0; i < 80; i++) {
+      const pieza = document.createElement("span");
+      pieza.style.left = Math.random() * 100 + "vw";
+      pieza.style.background = colores[Math.floor(Math.random() * colores.length)];
+      pieza.style.animationDuration = 2 + Math.random() * 2.5 + "s";
+      pieza.style.animationDelay = Math.random() * 0.8 + "s";
+      contenedor.appendChild(pieza);
+    }
+
+    document.body.appendChild(contenedor);
+    setTimeout(() => contenedor.remove(), 6000);
+  }
+
   function detener() {
     audio?.pause();
     audio = null;
@@ -101,12 +267,11 @@ import Base from "../layouts/Base.astro";
       if (i >= rutas.length) return;
       audio = new Audio(rutas[i++]);
       audio.addEventListener("ended", siguiente);
-      audio.play().catch(() => avisar("No se pudo reproducir el audio.", "error"));
+      audio.play().catch(() => avisar("No se pudo reproducir el audio.", "aviso"));
     };
     siguiente();
   }
 
-  // ---------- Dibujo ----------
   function imagenODe(e: Elemento, clase: string): HTMLElement {
     const url = urlArchivo(e.imagen);
     if (url) {
@@ -123,6 +288,7 @@ import Base from "../layouts/Base.astro";
   }
 
   function pintarTablero() {
+    tableroEl.style.gridTemplateColumns = `repeat(${lado}, minmax(0, 1fr))`;
     const casillas = tablero.map((e) => {
       const b = document.createElement("button");
       b.type = "button";
@@ -131,6 +297,7 @@ import Base from "../layouts/Base.astro";
       if (marcadas.has(e.id)) b.classList.add("marcada");
 
       const nombre = document.createElement("span");
+      nombre.className = "nombre";
       nombre.textContent = e.nombre_mazahua;
       b.append(imagenODe(e, "casilla-img"), nombre);
       b.addEventListener("click", () => marcar(e));
@@ -140,6 +307,7 @@ import Base from "../layouts/Base.astro";
   }
 
   function pintarActual() {
+    actualEl.classList.remove("nueva");
     if (!actual) {
       actualEl.innerHTML = '<p class="vacio">Pulsa «Cantar carta» para empezar.</p>';
       return;
@@ -149,10 +317,16 @@ import Base from "../layouts/Base.astro";
     const es = document.createElement("p");
     es.textContent = actual.nombre_espanol;
     actualEl.replaceChildren(imagenODe(actual, "actual-img"), mz, es);
+    void actualEl.offsetWidth;
+    actualEl.classList.add("nueva");
   }
 
   function pintarHistorial() {
     contadorEl.textContent = `(${cantadas.length}${modoSel.value === "tablero" ? ` de ${tablero.length}` : ""})`;
+
+    const total = modoSel.value === "tablero" ? tablero.length : cantadas.length + baraja.length;
+    rellenoEl.style.width = total ? `${(cantadas.length / total) * 100}%` : "0";
+
     historialEl.replaceChildren(
       ...[...cantadas].reverse().map((e) => {
         const s = document.createElement("span");
@@ -163,36 +337,35 @@ import Base from "../layouts/Base.astro";
     );
   }
 
-  // ---------- Reglas ----------
   function hayLinea(): boolean {
-    const m = (f: number, c: number) => marcadas.has(tablero[f * LADO + c].id);
-    for (let i = 0; i < LADO; i++) {
-      if ([...Array(LADO).keys()].every((j) => m(i, j))) return true; // fila
-      if ([...Array(LADO).keys()].every((j) => m(j, i))) return true; // columna
+    const m = (f: number, c: number) => marcadas.has(tablero[f * lado + c].id);
+    const rango = [...Array(lado).keys()];
+    for (let i = 0; i < lado; i++) {
+      if (rango.every((j) => m(i, j))) return true;
+      if (rango.every((j) => m(j, i))) return true;
     }
-    if ([...Array(LADO).keys()].every((i) => m(i, i))) return true; // diagonal
-    if ([...Array(LADO).keys()].every((i) => m(i, LADO - 1 - i))) return true; // diagonal
+    if (rango.every((i) => m(i, i))) return true;
+    if (rango.every((i) => m(i, lado - 1 - i))) return true;
     return false;
   }
 
-  function terminar(texto: string) {
+  function terminar(texto: string, gano = false) {
     terminado = true;
     btnCantar.disabled = true;
     avisar(texto, "ok");
+    if (gano) lanzarConfeti();
   }
 
   function marcar(e: Elemento) {
     if (terminado || marcadas.has(e.id)) return;
     if (!cantadas.some((c) => c.id === e.id)) {
-      avisar(`«${e.nombre_mazahua}» todavía no ha salido.`, "error");
+      avisar(`«${e.nombre_mazahua}» todavía no ha salido.`, "aviso");
       return;
     }
     marcadas.add(e.id);
-    tableroEl
-      .querySelector(`[data-id="${e.id}"]`)
-      ?.classList.add("marcada");
+    tableroEl.querySelector(`[data-id="${e.id}"]`)?.classList.add("marcada");
     avisar("¡Bien! Carta marcada.", "ok");
-    if (hayLinea()) terminar("🎉 ¡Lotería! Completaste una línea.");
+    if (hayLinea()) terminar("🎉 ¡Lotería! Completaste una línea.", true);
   }
 
   function cantar() {
@@ -212,7 +385,6 @@ import Base from "../layouts/Base.astro";
     if (baraja.length === 0) btnCantar.textContent = "Última carta cantada";
   }
 
-  // ---------- Partida nueva ----------
   async function errorDe(r: Response): Promise<string> {
     try {
       const d = await r.json();
@@ -222,6 +394,7 @@ import Base from "../layouts/Base.astro";
   }
 
   async function nuevaPartida() {
+    if (!modoJuego) return;
     detener();
     btnNueva.disabled = true;
     btnCantar.disabled = true;
@@ -236,7 +409,7 @@ import Base from "../layouts/Base.astro";
     avisar("Preparando partida…");
 
     try {
-      const rt = await fetch(`${API}/api/juego/tablero?tamano=${LADO * LADO}`);
+      const rt = await fetch(`${API}/api/juego/tablero?tamano=${lado * lado}`);
       if (!rt.ok) throw new Error(await errorDe(rt));
       tablero = await rt.json();
 
@@ -260,105 +433,529 @@ import Base from "../layouts/Base.astro";
         msg.includes("fetch")
           ? "No se pudo conectar con la API. ¿Está corriendo uvicorn?"
           : msg,
-        "error"
+        "aviso"
       );
     } finally {
       btnNueva.disabled = false;
     }
   }
 
+  function iniciarLibre() {
+    modoJuego = "libre";
+    sessionStorage.removeItem(CLAVE);
+    lado = Math.round(Math.sqrt(Number(tamanoSel.value)));
+    etiquetaEl.textContent = "Juego libre";
+    lblTamano.hidden = false;
+    mostrar("juego");
+    nuevaPartida();
+  }
+
+  async function entrarConCodigo(codigo: string) {
+    const limpio = codigo.trim().toUpperCase();
+    if (!limpio) return;
+
+    btnEntrar.disabled = true;
+    avisarEntrada("Buscando partida…", "ok");
+
+    try {
+      const r = await fetch(`${API}/api/partidas/${encodeURIComponent(limpio)}`);
+      if (r.status === 404) throw new Error("Ese código no existe. Revisa que esté bien escrito.");
+      if (!r.ok) throw new Error(await errorDe(r));
+
+      const partida = (await r.json()) as Partida;
+      modoJuego = "codigo";
+      lado = Math.round(Math.sqrt(partida.cartas_por_tablero));
+      sessionStorage.setItem(CLAVE, partida.codigo);
+
+      etiquetaEl.textContent = `Partida ${partida.codigo}`;
+      lblTamano.hidden = true;
+      avisarEntrada("");
+      mostrar("juego");
+      await nuevaPartida();
+    } catch (err) {
+      sessionStorage.removeItem(CLAVE);
+      mostrar("entrada");
+      const msg = (err as Error).message;
+      avisarEntrada(
+        msg.includes("fetch")
+          ? "No se pudo conectar con la API. Si el servidor estaba dormido, espera un minuto e intenta otra vez."
+          : msg,
+        "aviso"
+      );
+    } finally {
+      btnEntrar.disabled = false;
+    }
+  }
+
+  function irAModos() {
+    detener();
+    modoJuego = null;
+    tablero = [];
+    baraja = [];
+    cantadas = [];
+    actual = null;
+    marcadas = new Set();
+    sessionStorage.removeItem(CLAVE);
+    inputCodigo.value = "";
+    avisarEntrada("");
+    cargarCartasPreview();
+    mostrar("modos");
+  }
+
+  $("modo-codigo").addEventListener("click", () => {
+    mostrar("entrada");
+    inputCodigo.focus();
+  });
+  $("modo-libre").addEventListener("click", iniciarLibre);
+  $("btn-volver").addEventListener("click", irAModos);
+  $("btn-cambiar").addEventListener("click", irAModos);
+
+  $("form-codigo").addEventListener("submit", (e) => {
+    e.preventDefault();
+    entrarConCodigo(inputCodigo.value);
+  });
+
+  tamanoSel.addEventListener("change", () => {
+    lado = Math.round(Math.sqrt(Number(tamanoSel.value)));
+    nuevaPartida();
+  });
   btnNueva.addEventListener("click", nuevaPartida);
   btnCantar.addEventListener("click", cantar);
   btnRepetir.addEventListener("click", () => actual && reproducir(actual));
   modoSel.addEventListener("change", nuevaPartida);
-  nuevaPartida();
+
+  const inicial = new URLSearchParams(location.search).get("codigo") || sessionStorage.getItem(CLAVE);
+  if (inicial) {
+    inputCodigo.value = inicial.toUpperCase();
+    entrarConCodigo(inicial);
+  } else {
+    cargarCartasPreview();
+    mostrar("modos");
+  }
 </script>
 
 <style is:global>
-  .controles { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: end; margin-bottom: 0.5rem; }
-  .controles label { font-size: 0.9rem; font-weight: 600; }
-  .controles select {
-    display: block;
-    margin-top: 0.25rem;
-    padding: 0.45rem 0.6rem;
-    border: 1px solid var(--borde);
-    border-radius: 8px;
-    font: inherit;
+  [hidden] { display: none !important; }
+
+  main {
+    max-width: 1380px;
+    width: 100%;
+    margin: 0 auto;
+    padding-inline: clamp(1rem, 3vw, 2.5rem);
   }
-  .controles button, #btn-repetir {
-    border: 1px solid var(--acento);
-    background: var(--acento);
-    color: #fff;
-    border-radius: 8px;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    font: inherit;
+
+  .contenedor-modos {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(340px, 0.85fr) minmax(460px, 1.35fr);
+    grid-template-rows: auto 1fr;
+    gap: 1.25rem 2rem;
+    align-items: stretch;
+    margin: 0.75rem auto 1.5rem;
   }
-  #btn-nueva, #btn-repetir { background: #fff; color: var(--acento); }
-  .controles button:disabled, #btn-repetir:disabled { opacity: 0.45; cursor: not-allowed; }
 
-  #mensaje { min-height: 1.4em; font-weight: 600; }
-  #mensaje.ok { color: #1f7a3a; }
-  #mensaje.error { color: #b3261e; }
+  .titulo-pagina {
+    grid-column: 1 / -1;
+    text-align: center;
+    font-size: clamp(2.4rem, 4vw, 3.5rem);
+    margin: 0 0 0.5rem;
+    color: #000000;
+  }
 
-  .juego { display: grid; grid-template-columns: 1fr 300px; gap: 1.5rem; align-items: start; }
-  @media (max-width: 800px) { .juego { grid-template-columns: 1fr; } }
-  .juego h3 { color: var(--acento); margin: 0.5rem 0; }
+  .modos {
+    grid-column: 1;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+    width: 100%;
+    margin: 0;
+  }
 
-  .tablero { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.5rem; }
-  .casilla {
-    position: relative;
-    background: var(--tarjeta);
-    border: 2px solid var(--borde);
-    border-radius: 10px;
-    padding: 0.35rem;
-    cursor: pointer;
-    font: inherit;
-    font-size: 0.85rem;
-    font-weight: 600;
+  .modo-card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.25rem;
-    color: var(--texto);
+    justify-content: center;
+    gap: 0.75rem;
+    min-height: 225px;
+    padding: 1.4rem 1.5rem;
+    border: 5px solid #fff;
+    border-radius: 28px;
+    color: #000000;
+    font: inherit;
+    text-align: center;
+    cursor: pointer;
+    box-shadow: 0 14px 32px rgba(74, 15, 36, 0.3);
+    transition: transform 0.2s, box-shadow 0.2s;
   }
-  .casilla:hover { border-color: var(--acento); }
-  .casilla-img, .actual-img {
+
+  .modo-card.con-codigo { background: var(--vino); }
+  .modo-card.libre { background: var(--vino-claro); }
+
+  .modo-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(74, 15, 36, 0.4);
+  }
+
+  .modo-icono { font-size: 4rem; line-height: 1; color: #000000; }
+
+  .modo-card strong {
+    font-family: var(--titulos);
+    font-size: clamp(1.6rem, 2.2vw, 2.3rem);
+    line-height: 1.1;
+    color: #000000;
+  }
+
+  .modo-card span:last-child {
+    font-size: clamp(1rem, 1.35vw, 1.3rem);
+    line-height: 1.4;
+    max-width: 24rem;
+    color: #000000;
+  }
+
+  .vitrina-cartas {
+    grid-column: 2;
+    width: 100%;
+    height: 100%;
+    min-height: 470px;
+    padding: 2.25rem 2rem;
+    border-radius: 28px;
+    background: var(--vino);
+    border: 5px solid #fff;
+    box-shadow: 0 14px 32px rgba(74, 15, 36, 0.28);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .cartas-abanico {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+  }
+
+  .carta-muestra {
+    width: clamp(150px, 16.5vw, 225px);
+    background: #eef1f5;
+    border: 5px solid #f0be45;
+    border-radius: 22px;
+    padding: 0.65rem 0.65rem 0.85rem;
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.38);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+
+  .carta-muestra:nth-child(1) { transform: rotate(-7deg) translateY(8px); z-index: 1; }
+  .carta-muestra:nth-child(2) { transform: rotate(0deg) translateY(-8px); margin: 0 -0.5rem; z-index: 2; }
+  .carta-muestra:nth-child(3) { transform: rotate(7deg) translateY(10px); z-index: 1; }
+  .carta-muestra:hover { transform: translateY(-16px) rotate(0deg) scale(1.05); z-index: 5; background: #f8fafc; }
+
+  .carta-muestra-img-wrap {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #eef1f5;
+    display: grid;
+    place-items: center;
+  }
+
+  .carta-muestra-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .carta-muestra-sin-img {
+    width: 100%;
+    height: 100%;
+    display: grid;
+    place-items: center;
+    font-family: var(--titulos);
+    font-size: 3.4rem;
+    font-weight: 800;
+    color: #000000;
+    background: #eef1f5;
+  }
+
+  .carta-muestra-nombre {
+    font-family: var(--titulos);
+    font-size: clamp(1.2rem, 1.65vw, 1.7rem);
+    font-weight: 800;
+    color: #000000;
+    line-height: 1.1;
+    text-align: center;
+    word-break: break-word;
+  }
+
+  @media (max-width: 1024px) {
+    .contenedor-modos { grid-template-columns: 1fr; grid-template-rows: auto; }
+    .titulo-pagina, .modos, .vitrina-cartas { grid-column: 1; }
+    .vitrina-cartas { height: auto; min-height: 330px; padding: 1.75rem 1.25rem; }
+  }
+
+  @media (max-width: 600px) {
+    .modo-card { min-height: 205px; }
+    .carta-muestra { width: 105px; border-width: 4px; }
+    .vitrina-cartas { min-height: 250px; padding: 1.25rem 0.75rem; }
+  }
+
+  .entrada {
+    width: 100%;
+    max-width: 640px;
+    min-width: 0;
+    box-sizing: border-box;
+    margin: 2rem auto;
+    text-align: center;
+    background: #eef1f5;
+    border: 4px solid var(--vino);
+    border-radius: 24px;
+    padding: 2rem 2.2rem;
+    box-shadow: 0 8px 0 var(--vino-osc);
+  }
+  .entrada h3 { margin: 0 0 0.4rem; color: #000000; font-size: 2.1rem; }
+  .entrada p { margin: 0 0 1.2rem; font-size: 1.3rem; color: #000000; }
+  .entrada form { display: grid; gap: 1rem; width: 100%; min-width: 0; }
+  .entrada input {
+    width: 100%;
+    min-width: 0;
+    max-width: 100%;
+    box-sizing: border-box;
+    font: inherit;
+    font-size: clamp(1.6rem, 4vw, 2.3rem);
+    font-weight: 800;
+    text-align: center;
+    letter-spacing: clamp(3px, 1vw, 7px);
+    text-transform: uppercase;
+    padding: 0.65rem 0.9rem;
+    border: 3px solid var(--vino);
+    border-radius: 16px;
+    background: #f8fafc;
+    color: #000000;
+  }
+  .entrada input:focus { outline: 3px solid var(--oro); }
+  .entrada .btn.grande { width: 100%; max-width: 100%; box-sizing: border-box; }
+  .entrada .mensaje { font-size: 1.3rem; margin: 0.9rem 0 0.6rem; color: #000000; }
+
+  .etiqueta-partida { text-align: center; font-size: 1.4rem; margin: 0 0 1rem; color: #000000; }
+  .etiqueta-partida strong { color: #000000; letter-spacing: 3px; font-size: 1.6rem; }
+  .enlace-btn {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: #000000;
+    font: inherit;
+    font-weight: 700;
+    font-size: 1.2rem;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .guia {
+    max-width: 760px;
+    margin: 0 auto 1.2rem;
+    background: #eef1f5;
+    border: 3px solid var(--vino);
+    border-radius: 18px;
+    padding: 0.7rem 1.4rem;
+    color: #000000;
+  }
+  .guia summary { cursor: pointer; font-weight: 800; font-size: 1.5rem; color: #000000; }
+  .guia ol { margin: 0.7rem 0 0.4rem; padding-left: 1.5rem; font-size: 1.35rem; line-height: 1.7; color: #000000; }
+
+  .barra {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+    gap: 1.2rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.6rem;
+  }
+  .barra label { display: grid; gap: 0.3rem; font-size: 1.3rem; font-weight: 700; color: #000000; }
+  .barra select {
+    font-size: 1.25rem;
+    padding: 0.55rem 0.8rem;
+    border: 3px solid var(--vino);
+    border-radius: 12px;
+    background: #eef1f5;
+    color: #000000;
+  }
+  .btn.grande { font-size: 1.7rem; padding: 0.9rem 2.2rem; }
+
+  .mensaje { text-align: center; font-size: 1.7rem; font-weight: 800; min-height: 1.6em; margin: 0.6rem 0 1.2rem; color: #000000; }
+  .mensaje.ok { color: #000000; }
+  .mensaje.aviso { color: #000000; }
+
+  .juego {
+    display: grid;
+    grid-template-columns: minmax(0, 1.35fr) minmax(300px, 0.65fr);
+    gap: 2rem;
+    align-items: start;
+    max-width: 1120px;
+    margin: 0 auto;
+  }
+  .zona-tablero,
+  .panel-carta {
+    min-width: 0;
+  }
+  @media (max-width: 1000px) {
+    .juego { grid-template-columns: 1fr; }
+    .panel-carta { order: -1; max-width: 440px; width: 100%; margin: 0 auto; }
+  }
+  .juego h3 { font-size: 1.9rem; color: #000000; margin-top: 0; }
+
+  /* ---------- Tablero ---------- */
+  .tablero {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.9rem;
+    max-width: 640px;
+    margin: 0 auto;
+  }
+  .casilla {
+    --c: var(--vino);
+    position: relative;
+    background: #eef1f5;
+    border: 4px solid var(--c);
+    border-radius: 18px;
+    padding: 0.4rem;
+    cursor: pointer;
+    box-shadow: 0 5px 0 var(--vino-osc);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.3rem;
+    color: #000000;
+    overflow: hidden;
+    min-width: 0;
+    transition: transform 0.1s, box-shadow 0.1s, background 0.15s;
+  }
+  .casilla:hover { transform: translateY(-3px); background: #f8fafc; }
+  .casilla:active { transform: translateY(4px); box-shadow: 0 1px 0 var(--vino-osc); }
+  .casilla .nombre {
+    font-family: var(--titulos);
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: #000000;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .casilla-img,
+  .actual-img {
     width: 100%;
     aspect-ratio: 1 / 1;
     object-fit: cover;
-    border-radius: 6px;
-    background: #f3e6d2;
+    border-radius: 10px;
+    background: #eef1f5;
   }
-  .sin-img { display: grid; place-items: center; font-size: 2rem; color: var(--acento); }
-  .casilla.marcada { border-color: #1f7a3a; background: #e6f4ea; }
+  .sin-img { display: grid; place-items: center; font-size: 3rem; font-weight: 800; color: #000000; }
+
   .casilla.marcada::after {
-    content: "✔";
+    content: "✓";
     position: absolute;
-    top: 6px;
-    right: 8px;
-    font-size: 1.4rem;
-    color: #1f7a3a;
-    text-shadow: 0 0 3px #fff;
+    top: 50%;
+    left: 50%;
+    width: 62%;
+    aspect-ratio: 1 / 1;
+    translate: -50% -60%;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, #f8d56b, #c98a00);
+    border: 4px solid #fff3c4;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.35);
+    color: #000000;
+    font-size: 2.6rem;
+    font-weight: 900;
+    animation: ficha 0.3s ease-out;
+  }
+  @keyframes ficha {
+    from { transform: scale(0) rotate(-120deg); }
+    to { transform: scale(1) rotate(0); }
   }
 
+  /* ---------- Carta cantada ---------- */
+  .panel-carta { text-align: center; }
   .actual {
-    background: var(--tarjeta);
-    border: 1px solid var(--borde);
-    border-radius: 12px;
-    padding: 0.75rem;
-    text-align: center;
-    margin-bottom: 0.5rem;
+    background: #eef1f5;
+    border: 5px solid var(--vino);
+    border-radius: 24px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 7px 0 var(--vino-osc);
+    color: #000000;
+    transition: background 0.15s;
   }
-  .actual h4 { margin: 0.5rem 0 0; font-size: 1.5rem; color: var(--acento); }
-  .actual p { margin: 0.1rem 0 0; }
-  .actual .vacio { color: #7a6a58; }
+  .actual:hover { background: #f8fafc; }
+  .actual.nueva { animation: llega 0.45s ease-out; }
+  @keyframes llega {
+    from { transform: scale(0.7) rotate(-6deg); opacity: 0; }
+    to { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .actual h4 { margin: 0.6rem 0 0; font-size: 3.2rem; color: #000000; line-height: 1.1; }
+  .actual p { margin: 0.2rem 0 0; font-size: 1.9rem; font-weight: 700; color: #000000; }
+  .actual .vacio { font-size: 1.4rem; padding: 2rem 0; color: #000000; }
 
-  .historial { display: flex; flex-wrap: wrap; gap: 0.35rem; }
-  .chip {
-    background: #f3e6d2;
+  .progreso {
+    height: 20px;
+    background: #eef1f5;
+    border: 3px solid var(--vino);
     border-radius: 999px;
-    padding: 0.15rem 0.6rem;
-    font-size: 0.8rem;
+    overflow: hidden;
+    margin: 1rem 0 0.4rem;
+  }
+  #relleno { height: 100%; width: 0; background: linear-gradient(90deg, var(--oro), var(--verde)); transition: width 0.4s; }
+  .panel-carta .contador { margin: 0; font-size: 1.4rem; font-weight: 700; color: #000000; }
+
+  .historial { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin-top: 0.7rem; }
+  .chip {
+    background: #eef1f5;
+    border: 2px solid var(--vino);
+    border-radius: 999px;
+    padding: 0.2rem 0.8rem;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #000000;
+  }
+
+  #zona-juego,
+  #zona-juego h3,
+  #zona-juego h4,
+  #zona-juego p,
+  #zona-juego label,
+  #zona-juego summary,
+  #zona-juego .mensaje,
+  #zona-juego .mensaje.ok,
+  #zona-juego .mensaje.aviso,
+  #zona-juego .etiqueta-partida,
+  #zona-juego .etiqueta-partida strong,
+  #zona-juego .enlace-btn,
+  #zona-juego .btn,
+  #zona-juego .casilla,
+  #zona-juego .casilla .nombre,
+  #zona-juego .actual .vacio {
+    color: #000000;
+  }
+
+  .confeti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+  .confeti span {
+    position: absolute;
+    top: -20px;
+    width: 12px;
+    height: 18px;
+    border-radius: 3px;
+    animation: cae linear forwards;
+  }
+  @keyframes cae { to { transform: translateY(105vh) rotate(720deg); } }
+
+  @media (max-width: 600px) {
+    .casilla { padding: 0.25rem; border-width: 3px; }
+    .casilla .nombre { font-size: 0.95rem; }
+    .btn.grande { font-size: 1.35rem; padding: 0.8rem 1.4rem; }
+    .actual h4 { font-size: 2.4rem; }
+    .modo-card { min-height: 205px; }
   }
 </style>

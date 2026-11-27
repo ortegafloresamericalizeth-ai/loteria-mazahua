@@ -1,16 +1,15 @@
 ---
 interface Props {
   titulo: string;
+  mostrarMenu?: boolean;
 }
-const { titulo } = Astro.props;
+const { titulo, mostrarMenu = true } = Astro.props;
 
 const ruta = Astro.url.pathname.replace(/\/$/, "") || "/";
-const enlaces = [
+
+const izquierda = [
   { href: "/", texto: "Inicio" },
-  { href: "/catalogo", texto: "Catálogo" },
-  { href: "/jugar", texto: "Jugar" },
-  { href: "/admin", texto: "Administrar" },
-  { href: "/videos", texto: "Videos" },
+  { href: "/tutorial", texto: "¿Cómo se juega?" },
 ];
 ---
 
@@ -19,63 +18,246 @@ const enlaces = [
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#781c3b" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <title>{titulo} | Lotería Mazahua</title>
   </head>
   <body>
     <header>
-      <a class="marca" href="/">Lotería Mazahua</a>
-      <nav>
-        {enlaces.map((e) => (
-          <a href={e.href} class:list={[{ activo: ruta === e.href }]}>{e.texto}</a>
-        ))}
-      </nav>
+    <a class="marca" href="/">
+        <span>Lotería <b>Mazahua</b></span>
+      </a>
+
+      {mostrarMenu && (
+        <>
+          <nav class="menu-izq">
+            {izquierda.map((e) => (
+              <a href={e.href} class:list={["pestana", { activo: ruta === e.href }]}>
+                {e.texto}
+              </a>
+            ))}
+          </nav>
+
+          <nav class="menu-der">
+            <a href="/jugar" class:list={["pestana pill-jugar", { activo: ruta === "/jugar" }]}>Jugar</a>
+            <a href="/admin" class:list={["pestana pill-admin", { activo: ruta === "/admin" }]}>Administrador</a>
+          </nav>
+        </>
+      )}
     </header>
+
     <main>
       <slot />
     </main>
-    <footer>Proyecto Integrador · Sistemas Operativos II</footer>
+
+    <footer>
+      <p class="lema">Mazahua y español, juntos en la misma mesa.</p>
+      <p>
+        Tecnológico de Estudios Superiores de San Felipe del Progreso ·
+        Proyecto Integrador · Sistemas Operativos II
+      </p>
+    </footer>
   </body>
 </html>
 
 <style is:global>
   :root {
-    --fondo: #fdf6ec;
-    --tarjeta: #ffffff;
-    --acento: #b5411c;
-    --texto: #2b2118;
-    --borde: #e7d8c3;
+    --fondo: #faf5ea;        /* Beige crema pastel suave */
+    --crema: #faf5ea;        /* Alias beige pastel para body y footer */
+    --texto: #1f2937;        /* Texto oscuro legible sobre tonos pastel */
+    --titulos: "Poppins", "Trebuchet MS", system-ui, sans-serif;
+
+    /* Colores pastel luminosos */
+    --vino: #ff85b3;         /* Rosa pastel (principal) */
+    --vino-claro: #6edbe8;   /* Turquesa pastel (secundario) */
+    --vino-osc: #6fa8dc;     /* Azul pastel (terciario / pie y bordes) */
+    --oro: #ffd966;          /* Amarillo / dorado pastel */
+    --amarillo: #ffd966;     /* Alias pastel para la píldora Jugar */
+    --turquesa: #6edbe8;     /* Alias pastel para botones turquesa */
+    --verde: #7ee0b3;        /* Verde menta pastel */
+
+    /* Franja decorativa del pie en tonos pastel */
+    --greca: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='12'%3E%3Cpath d='M12 1l5 5-5 5-5-5z' fill='%23ffd966'/%3E%3Cpath d='M0 6l3-3 3 3-3 3zM18 6l3-3 3 3-3 3z' fill='%236edbe8'/%3E%3C/svg%3E");
+
+    /* Alias del diseño azul, por si algún archivo todavía los usa */
+    --azul-osc: var(--vino-osc);
+    --azul: var(--vino);
+    --azul-claro: var(--vino-claro);
   }
+
   * { box-sizing: border-box; }
+  html { font-size: 112.5%; }
+  button, input, select, textarea { font: inherit; }
+
   body {
     margin: 0;
-    font-family: system-ui, sans-serif;
-    background: var(--fondo);
+    font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
     color: var(--texto);
+    background-color: var(--fondo);
+    background-image:
+      radial-gradient(rgba(255, 217, 102, 0.35) 2px, transparent 2px),
+      radial-gradient(rgba(110, 219, 232, 0.28) 2px, transparent 2px),
+      radial-gradient(rgba(255, 133, 179, 0.25) 2px, transparent 2px);
+    background-size: 48px 48px;
+    background-position: 0 0, 16px 24px, 32px 12px;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
   }
+
+  h1, h2, h3, h4 { font-family: var(--titulos); }
+
+  /* ---------- Encabezado ---------- */
   header {
-    background: var(--acento);
-    color: #fff;
-    padding: 1rem 1.5rem;
+    position: relative;
+    z-index: 5;
+    background: var(--vino);
+    color: #000000;
+    padding: 0.8rem 1.4rem;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    justify-content: space-between;
-    gap: 0.5rem;
+    gap: 0.75rem;
+    border-radius: 0 0 28px 28px;
+    box-shadow: 0 8px 20px rgba(111, 168, 220, 0.22);
   }
-  .marca { color: #fff; text-decoration: none; font-size: 1.4rem; font-weight: 700; }
-  nav { display: flex; gap: 1rem; flex-wrap: wrap; }
-  nav a { color: #fff; text-decoration: none; font-weight: 600; padding-bottom: 2px; }
-  nav a:hover { text-decoration: underline; }
-  nav a.activo { border-bottom: 2px solid #fff; }
-  main { width: 100%; max-width: 1100px; margin: 0 auto; padding: 1.5rem; flex: 1; }
+  .marca {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    color: #000000;
+    text-decoration: none;
+    font-family: var(--titulos);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-right: 0.6rem;
+  }
+  .marca b { color: #000000; text-shadow: none; }
+
+  nav { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
+  .menu-der { margin-left: auto; }
+
+  .pestana {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1.3rem;
+    border-radius: 999px;
+    background: #eef1f5;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+    color: #1f2937;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 1.05rem;
+    transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
+  }
+  .pestana:hover {
+    background: #f8fafc;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+    transform: translateY(-2px);
+  }
+  .pestana.activo {
+    background: #e2e8f0;
+    color: #111827;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);
+  }
+
+  .pestana.pill-jugar,
+  .pestana.pill-admin {
+    background: #eef1f5;
+    color: #1f2937;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  }
+  .pestana.pill-jugar:hover,
+  .pestana.pill-admin:hover {
+    background: #f8fafc;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+  }
+  .pestana.pill-jugar.activo,
+  .pestana.pill-admin.activo {
+    outline: 2px solid #ffffff;
+  }
+  /* ---------- Pie ---------- */
   footer {
+    position: relative;
+    background: var(--vino-osc);
+    color: #000000;
     text-align: center;
-    padding: 1rem;
-    font-size: 0.85rem;
-    color: #7a6a58;
-    border-top: 1px solid var(--borde);
+    padding: calc(1.2rem + 12px) 1rem 1.2rem;
+    font-size: 0.92rem;
+  }
+  footer::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 12px;
+    background: var(--vino) var(--greca) repeat-x;
+  }
+  footer p {
+    margin: 0.25rem 0;
+    color: #000000;
+  }
+  footer .lema {
+    font-family: var(--titulos);
+    font-size: 1.2rem;
+    color: #000000;
+    font-weight: 700;
+  }
+  footer a {
+    color: #000000;
+  }
+  /* ---------- Colores por categoría (pastel) ---------- */
+  [data-cat="animales"] { --c: #f4a261; }
+  [data-cat="naturaleza"] { --c: #74c69d; }
+  [data-cat="alimentos y cultivos"] { --c: #e9c46a; }
+  [data-cat="familia"] { --c: #f28482; }
+  [data-cat="cuerpo"] { --c: #ff9aa2; }
+  [data-cat="objetos"] { --c: #8ecae6; }
+  [data-cat="lugares"] { --c: #bdb2ff; }
+  [data-cat="emociones"] { --c: #72efdd; }
+  [data-cat="acciones"] { --c: #c7f9cc; }
+  [data-cat="saludos"] { --c: #a0c4ff; }
+
+  /* ---------- Botones grandes ---------- */
+  .btn {
+    display: inline-block;
+    border: 0;
+    border-radius: 16px;
+    padding: 0.8rem 1.4rem;
+    min-height: 3.2rem;
+    font-size: 1.2rem;
+    font-weight: 800;
+    text-decoration: none;
+    color: #1f2937;
+    cursor: pointer;
+    background: var(--b, var(--vino));
+    box-shadow: 0 5px 0 rgba(0, 0, 0, 0.14);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  .btn:hover:not(:disabled) { transform: translateY(-2px); }
+  .btn:active:not(:disabled) { transform: translateY(4px); box-shadow: 0 1px 0 rgba(0, 0, 0, 0.14); }
+  .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+  .btn.verde { --b: var(--verde); color: #1f2937; }
+  .btn.azul { --b: var(--turquesa); color: #1f2937; }
+  .btn.naranja { --b: var(--oro); color: #1f2937; }
+  .btn.dorado { --b: var(--oro); color: #1f2937; }
+  .btn.claro { --b: #ffffff; color: #1f2937; }
+
+  @media (max-width: 700px) {
+    .marca { font-size: 1.25rem; }
+    .pestana { font-size: 0.95rem; padding: 0.45rem 0.9rem; }
+    .menu-der { margin-left: 0; }
+    .titulo-pagina { font-size: 1.6rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
   }
 </style>

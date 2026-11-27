@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 import models
 from database import engine
 from routers import elementos, juego
+from routers.admin import router as admin_router
 
 BASE = Path(__file__).resolve().parent
 for sub in ("imagenes", "audios"):
@@ -28,3 +29,4 @@ app.mount("/uploads", StaticFiles(directory=BASE / "uploads"), name="uploads")
 
 app.include_router(elementos.router)
 app.include_router(juego.router)
+app.include_router(admin_router)

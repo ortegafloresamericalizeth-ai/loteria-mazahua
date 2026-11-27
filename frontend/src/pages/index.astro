@@ -4,157 +4,210 @@ import Base from "../layouts/Base.astro";
 
 <Base titulo="Inicio">
   <section class="portada">
-    <p class="etiqueta">Proyecto Integrador · Sistemas Operativos II</p>
-    <h2>Lotería Interactiva para el Fortalecimiento de la Lengua Mazahua</h2>
-    <p class="subtitulo">
-      Plataforma web de apoyo al aprendizaje del vocabulario mazahua en escuelas
-      de educación básica.
-    </p>
-    <div class="acciones">
-      <a class="boton" href="/jugar">Jugar</a>
-      <a class="boton secundario" href="/catalogo">Consultar el catálogo</a>
+    <div class="portada-texto">
+      <h1>Lotería<span>Mazahua</span></h1>
+
+      <div class="accesos">
+        <a class="acceso catalogo" href="/catalogo">
+          <svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true">
+            <rect x="3" y="4" width="14" height="17" rx="2" fill="currentColor" />
+            <rect x="7" y="2" width="14" height="17" rx="2" fill="none" stroke="currentColor" stroke-width="2" />
+          </svg>
+          <strong>Catálogo</strong>
+          <span>Conoce todas las cartas</span>
+          <span class="btn-ir">Ir</span>
+        </a>
+
+        <a class="acceso jugador" href="/jugar">
+          <svg viewBox="0 0 24 24" width="48" height="48" aria-hidden="true">
+            <path fill="currentColor" d="M6 7h12a4.5 4.5 0 0 1 4.4 5.4l-.8 3.6a3 3 0 0 1-5.2 1.2L15 15.5H9l-1.4 1.7A3 3 0 0 1 2.4 16l-.8-3.6A4.5 4.5 0 0 1 6 7z" />
+          </svg>
+          <strong>Jugar</strong>
+          <span>Entra y empieza a jugar</span>
+          <span class="btn-ir">Ir</span>
+        </a>
+
+        <a class="acceso admin" href="/admin">
+          <svg viewBox="0 0 24 24" width="46" height="46" aria-hidden="true">
+            <circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="3.2" stroke-dasharray="3.14 3.14" />
+            <circle cx="12" cy="12" r="6.2" fill="currentColor" />
+          </svg>
+          <strong>Administrador</strong>
+          <span>Inicia sesión y crea la partida</span>
+          <span class="btn-ir">Ir</span>
+        </a>
+      </div>
     </div>
-  </section>
 
-  <section class="bloque">
-    <h3>Planteamiento del problema</h3>
-    <p>
-      La lengua mazahua, hablada principalmente en comunidades del Estado de
-      México, ha disminuido su uso entre las nuevas generaciones. En el ámbito de
-      la educación básica existe una disponibilidad limitada de materiales
-      didácticos interactivos que permitan a los estudiantes familiarizarse con su
-      vocabulario de manera sencilla, dinámica y relacionada con su contexto.
-    </p>
-  </section>
-
-  <section class="bloque">
-    <h3>Objetivo</h3>
-    <p>
-      Desarrollar una lotería interactiva que permita a los estudiantes reconocer
-      y asociar imágenes, palabras y pronunciaciones del vocabulario en lengua
-      mazahua mediante el uso de tecnologías digitales y recursos electrónicos.
-    </p>
-  </section>
-
-  <section class="bloque">
-    <h3>Componentes de la plataforma</h3>
-    <div class="rejilla">
-      <article>
-        <h4>Catálogo de vocabulario</h4>
-        <p>
-          Consulta de cada elemento con su imagen, su nombre en español y en
-          mazahua, y su categoría.
-        </p>
-      </article>
-      <article>
-        <h4>Pronunciación</h4>
-        <p>
-          Reproducción del audio con la pronunciación de cada palabra en lengua
-          mazahua.
-        </p>
-      </article>
-      <article>
-        <h4>Dinámica de lotería</h4>
-        <p>
-          Tablero y baraja para jugar desde el navegador, asociando la palabra
-          escuchada con su imagen.
-        </p>
-      </article>
-      <article>
-        <h4>Administración</h4>
-        <p>
-          Registro, modificación y eliminación de elementos, así como la carga
-          de imágenes y audios.
-        </p>
-      </article>
+    <div class="portada-imagen">
+      <img src="/imagenes/loteria.png" alt="Niña mazahua mostrando una tarjeta de lotería" />
     </div>
-  </section>
-
-  <section class="bloque">
-    <h3>Tecnologías utilizadas</h3>
-    <ul class="tecnologias">
-      <li><strong>FastAPI</strong> · API REST del sistema</li>
-      <li><strong>Astro</strong> · interfaz web interactiva y responsiva</li>
-      <li><strong>MySQL</strong> · base de datos del vocabulario</li>
-    </ul>
-    <p class="nota">
-      La arquitectura permite integrar, en una etapa posterior, los componentes
-      electrónicos del proyecto (tarjetas con tecnología RFID, luces y botones)
-      desarrollados en otras asignaturas.
-    </p>
   </section>
 </Base>
 
-<style>
+<style is:global>
+  /* Quita el límite de ancho solo en el inicio */
+  main {
+    max-width: 1700px !important;
+    padding-inline: clamp(1rem, 4vw, 4rem) !important;
+  }
+
   .portada {
-    background: var(--tarjeta);
-    border: 1px solid var(--borde);
-    border-left: 6px solid var(--acento);
-    border-radius: 6px;
-    padding: 2rem 1.75rem;
-    margin-bottom: 2rem;
-  }
-  .etiqueta {
-    margin: 0 0 0.5rem;
-    font-size: 0.8rem;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
-    color: #7a6a58;
-  }
-  .portada h2 {
-    margin: 0 0 0.75rem;
-    font-size: 1.9rem;
-    line-height: 1.25;
-    max-width: 760px;
-  }
-  .subtitulo {
-    margin: 0 0 1.5rem;
-    max-width: 640px;
-    line-height: 1.6;
-    color: #4a3d30;
-  }
-  .acciones { display: flex; gap: 0.75rem; flex-wrap: wrap; }
-  .boton {
-    background: var(--acento);
-    color: #fff;
-    border: 1px solid var(--acento);
-    border-radius: 4px;
-    padding: 0.6rem 1.25rem;
-    text-decoration: none;
-    font-weight: 600;
-  }
-  .boton.secundario { background: transparent; color: var(--acento); }
-  .boton:hover { opacity: 0.88; }
-
-  .bloque { margin-bottom: 2rem; }
-  .bloque h3 {
-    margin: 0 0 0.75rem;
-    padding-bottom: 0.4rem;
-    border-bottom: 1px solid var(--borde);
-    color: var(--acento);
-    font-size: 1.25rem;
-  }
-  .bloque p { line-height: 1.7; max-width: 800px; margin: 0; }
-
-  .rejilla {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 1rem;
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: clamp(1.5rem, 3vw, 4rem);
+    align-items: center;
+    width: 100%;
+    min-height: 72vh;
+    margin: 0 auto;
   }
-  .rejilla article {
-    background: var(--tarjeta);
-    border: 1px solid var(--borde);
-    border-radius: 6px;
-    padding: 1rem 1.1rem;
-  }
-  .rejilla h4 { margin: 0 0 0.4rem; font-size: 1rem; }
-  .rejilla p { font-size: 0.92rem; line-height: 1.55; }
 
-  .tecnologias { margin: 0 0 1rem; padding-left: 1.2rem; line-height: 1.9; }
-  .nota { font-size: 0.92rem; color: #4a3d30; }
-
-  @media (max-width: 600px) {
-    .portada { padding: 1.5rem 1.1rem; }
-    .portada h2 { font-size: 1.45rem; }
+  @media (max-width: 1000px) {
+    .portada {
+      grid-template-columns: 1fr;
+      text-align: center;
+      min-height: 0;
+    }
+    .portada-imagen {
+      order: -1;
+    }
+    .accesos {
+      margin-inline: auto;
+    }
   }
+
+  /* ---------- Título ---------- */
+  .portada h1 {
+    margin: 0 0 2rem;
+    font-weight: 800;
+    font-size: clamp(4rem, 11.5vw, 11rem);
+    line-height: 0.92;
+    letter-spacing: -0.03em;
+    color: var(--vino-osc);
+  }
+  .portada h1 span {
+    display: block;
+    color: var(--vino);
+  }
+
+  /* ---------- Tarjetas y botones "Ir" del mismo tamaño ---------- */
+  .accesos {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 columnas idénticas */
+    grid-auto-rows: 1fr;                              /* misma altura */
+    gap: clamp(0.8rem, 1.6vw, 1.8rem);
+    width: 100%;
+    align-items: stretch;
+  }
+
+  @media (max-width: 700px) {
+    .accesos {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .acceso {
+    container-type: inline-size; /* el texto se adapta al ancho de la tarjeta */
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+    gap: 0.45rem;
+    width: 100%;
+    min-width: 0;
+    height: 100% !important;
+    min-height: 290px !important;
+    padding: 1.6rem 1rem;
+    box-sizing: border-box;
+    border: 5px solid #fff;
+    border-radius: 28px;
+    color: #1f2937;
+    text-decoration: none;
+    text-align: center;
+    box-shadow: 0 14px 32px rgba(111, 168, 220, 0.22);
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .acceso.catalogo { background: var(--vino-claro); }
+  .acceso.jugador { background: var(--vino); }
+  .acceso.admin { background: var(--vino-osc); }
+
+  .acceso:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(111, 168, 220, 0.32);
+  }
+
+  .acceso svg {
+    width: clamp(52px, 5vw, 84px);
+    height: clamp(52px, 5vw, 84px);
+    flex-shrink: 0;
+  }
+
+  /* Título: se encoge para que "Administrador" quepa en su tarjeta */
+  .acceso strong {
+    margin-top: 0.25rem;
+    max-width: 100%;
+    font-family: var(--titulos);
+    font-size: clamp(1.1rem, 9.5cqi, 2.5rem);
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+
+  .acceso span:not(.btn-ir) {
+    max-width: 100%;
+    font-size: clamp(0.95rem, 6.5cqi, 1.45rem);
+    line-height: 1.25;
+    opacity: 0.95;
+  }
+
+  .btn-ir {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 115px !important;
+    height: 42px !important;
+    margin-top: auto !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+    border-radius: 999px;
+    background: #ffffff;
+    color: #1f2937;
+    font-size: 1.05rem;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+    transition: transform 0.12s, background 0.12s;
+  }
+
+  .acceso:hover .btn-ir {
+    background: #fffdf5;
+    transform: scale(1.04);
+  }
+
+  /* ---------- Imagen ---------- */
+.portada {
+  /* minmax(0, …) evita que el título apriete la columna de la imagen */
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr) !important;
+}
+
+.portada-imagen {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100%;
+  min-width: 0;
+  padding: 0 !important;
+}
+
+.portada-imagen img {
+  display: block;
+  width: 100% !important;
+  max-width: 600px !important;
+  height: auto !important;
+  margin: 0 auto !important;
+  transform: translateX(clamp(1rem, 5vw, 6rem)) !important;
+  object-fit: contain;
+  border-radius: 28px; /* el fondo crema de la foto se ve como una tarjeta */
+  box-shadow: 0 14px 32px rgba(31, 42, 68, 0.18);
+}
 </style>

@@ -1,0 +1,73 @@
+---
+import Base from "../layouts/Base.astro";
+
+const pasos = [
+  { n: 1, titulo: "El administrador crea la partida", texto: "Inicia sesión en Administrador, elige cuántos tableros y cuántas cartas por tablero, y crea la partida." },
+  { n: 2, titulo: "Entra a jugar", texto: "Ve a Jugar y espera tu tablero. Cada casilla es una carta con su imagen y su palabra en mazahua." },
+  { n: 3, titulo: "Canta una carta", texto: "Toca «Cantar carta». Aparece una carta y suena su palabra en mazahua y luego en español." },
+  { n: 4, titulo: "Busca y marca", texto: "Si la carta está en tu tablero, tócala para poner tu ficha. Puedes repetir el audio las veces que quieras." },
+  { n: 5, titulo: "¡Lotería!", texto: "Gana quien completa primero una fila, una columna o una diagonal." },
+];
+---
+
+<Base titulo="¿Cómo se juega?">
+  <h2 class="titulo-pagina">¿Cómo se juega?</h2>
+
+  <ol class="pasos">
+    {pasos.map((p) => (
+      <li class="paso">
+        <span class="paso-num">{p.n}</span>
+        <div>
+          <h3>{p.titulo}</h3>
+          <p>{p.texto}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+
+  <p class="tutorial-cta">
+    <a class="btn dorado" href="/jugar"> ¡A jugar!</a>
+    <a class="btn claro" href="/catalogo"> Ver el catálogo</a>
+  </p>
+</Base>
+
+<style is:global>
+  .pasos {
+    list-style: none;
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 0;
+    display: grid;
+    gap: 1rem;
+  }
+  .paso {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    background: #eef1f5;
+    border: 4px solid var(--vino);
+    border-radius: 22px;
+    padding: 1rem 1.2rem;
+    box-shadow: 0 6px 0 var(--vino-osc);
+  }
+  .paso:hover {
+    background: #f8fafc;
+  }
+  .paso-num {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    background: var(--oro);
+    color: var(--vino-osc);
+    font-family: var(--titulos);
+    font-weight: 800;
+    font-size: 1.5rem;
+  }
+  .paso h3 { margin: 0 0 0.2rem; color: var(--vino); font-size: 1.3rem; }
+  .paso p { margin: 0; font-size: 1.05rem; line-height: 1.5; }
+
+  .tutorial-cta { display: flex; justify-content: center; gap: 0.8rem; flex-wrap: wrap; margin-top: 1.8rem; }
+</style>
