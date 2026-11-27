@@ -19,7 +19,11 @@ app = FastAPI(title="Lotería Interactiva Mazahua", version="1.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:4321", "http://127.0.0.1:4321"],
+    allow_origins=[
+        "http://localhost:4321",
+        "http://127.0.0.1:4321",
+        "https://loteria-mazahua-umko.onrender.com",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
